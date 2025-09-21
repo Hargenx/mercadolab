@@ -1,0 +1,62 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mercadolab"
+version = "0.1.0"
+description = "UM FRAMEWORK BASEADO EM AGENTES PARA SIMULAÇÕES DE INVESTIMENTOS NO MERCADO FINANCEIRO - Laboratório de simulações baseadas em agentes para mercados."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "Raphael Mauricio Sanches de Jesus", email = "raphael.mauricio@gmail.com" },
+]
+keywords = ["abm", "agent-based", "market", "finance", "simulation"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Intended Audience :: Science/Research",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Office/Business :: Financial :: Investment"
+]
+dependencies = [
+  "numpy>=1.24",
+  "pandas>=2.0",
+  "matplotlib>=3.7",
+  "scipy>=1.11",
+  "pyyaml>=6.0",
+  "statsmodels>=0.14"
+]
+
+[project.optional-dependencies]
+plot = ["matplotlib>=3.7"]
+dev = ["pytest>=8.0", "ruff>=0.6.0", "mypy>=1.10.0"]
+ml = ["torch>=2.2", "gymnasium>=0.29", "stable-baselines3>=2.3"]
+
+[project.urls]
+Homepage = "https://github.com/Hargenx/mercadolab"
+Issues = "https://github.com/Hargenx/mercadolab/issues"
+
+[project.scripts]
+mercadolab = "mercadolab.cli:main"
+mlab = "mercadolab.cli:main"
+
+[tool.ruff]
+line-length = 100
+
+[tool.mypy]
+python_version = "3.11"
+strict = false
+
+[tool.pytest.ini_options]
+addopts = "-q"
+
+# Entry points for plugin architecture
+[project.entry-points."mercadolab.plugins"]
+# o core já publica alguns "referentes" (ex.: ambientes e investidores padrão)
+mercado_simples = "abm_mercado.mercados.environments:MercadoSimples"
+investidor_fundamentalista = "abm_mercado.investidores.fundamentalista:InvestidorFundamentalista"
+investidor_ruido = "abm_mercado.investidores.ruido:InvestidorRuido"
+investidor_tendencia = "abm_mercado.investidores.tecnico:InvestidorTendencia"
+random-trader = "mercadolab.plugins.random_trader:RandomTrader"
