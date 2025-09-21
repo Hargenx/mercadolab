@@ -60,22 +60,26 @@ mercadolab run --steps 50 --n-agents 3 --price0 100
 
 ```python
 from mercadolab.core.simulation import Simulation
-from mercadolab.core.agent import BaseAgent, Order
+from mercadolab.core.market import Market
+from mercadolab.core.investidor import Investidor, Ordem
 
-class MyAgent(BaseAgent):
-    def decide(self, market):
-        # Sua lógica de decisão aqui...
-        return Order(agent=self, side="buy", qty=0.5)
+class MeuInvestidor(Investidor):
+    def decide(self, market: Market):
+        # Lógica de decisão do agente
+        return Ordem(agent=self, side="buy", qty=0.5)
 
 sim = Simulation(seed=42)
-sim.add_agent(MyAgent(name="bob"))
+sim.add_agent(MeuInvestidor(name="alice"))
 sim.run(steps=100)
 df = sim.to_frame()
+print(df.tail())
 ```
 
-- `BaseAgent.decide(market) -> Order|None`: onde a “estratégia” acontece.  
-- `Market`: evolui preço (passeio aleatório simples) e executa ordens *market*.  
-- `Simulation`: orquestra o loop, coleta *logs* e exporta `pandas.DataFrame`.
+**Conceitos:**
+
+- `Investidor.decide(market) -> Ordem | None`: onde a “estratégia” acontece (retorne `None` se não negociar no tick).
+- `Market`: evolui o preço (processo simples) e executa ordens a mercado.
+- `Simulation`: orquestra o loop, coleta *logs* e exporta um `pandas.DataFrame`.
 
 ---
 
@@ -87,6 +91,8 @@ Declare seu agente como *plugin* no `pyproject.toml` do seu pacote:
 [project.entry-points."mercadolab.plugins"]
 hello = "mercadolab_hello.hello:HelloAgent"
 ```
+
+- Publique agentes externos como plugins detectados automaticamente.
 
 comando de verificação:
 
@@ -103,7 +109,7 @@ plugins = load_plugins()
 Agent = plugins["meu-agente"]
 ```
 
-> Dica: publique seus plugins com o prefixo **`mercadolab-`** (ex.: `mercadolab-fiis`).
+> Dica: publique seus plugins com o prefixo **`mercadolab-`** (ex.: `mercadolab-fiis`) para facilitar descoberta.
 
 ---
 
