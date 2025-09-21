@@ -2,6 +2,11 @@ import argparse
 import sys
 from .core.simulation import Simulation
 from .plugins import load_plugins
+from mercadolab import __version__
+
+# Ajuda com defaults + exemplos formatados
+class _Help(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter):
+    pass
 
 def _cmd_quickstart(args: argparse.Namespace) -> int:
     # Simple 10-step simulation with a single RandomTrader plugin agent
@@ -44,9 +49,22 @@ def _cmd_run(args: argparse.Namespace) -> int:
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(
-        prog="mercadolab",
-        description="MercadoLab — laboratório ABM para mercados."
-    )
+                            prog="mercadolab",
+                            description="MercadoLab — laboratório ABM para mercados.",
+                            formatter_class=_Help,
+                            epilog="""\
+                            Exemplos:
+                            # Roda um exemplo rápido com plugin RandomTrader
+                            mercadolab quickstart --steps 50 --seed 42
+
+                            # Lista plugins carregados via entry-points
+                            mercadolab plugins
+
+                            # Simulação mínima sem plugins (agentes 'hold')
+                            mercadolab run --steps 100 --n-agents 3 --price0 100
+                            """
+                        )
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     p1 = sub.add_parser("quickstart", help="Roda um exemplo rápido usando o plugin RandomTrader.")

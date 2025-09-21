@@ -85,7 +85,14 @@ Declare seu agente como *plugin* no `pyproject.toml` do seu pacote:
 
 ```toml
 [project.entry-points."mercadolab.plugins"]
-meu-agente = "meupacote.meumodulo:MeuAgente"
+hello = "mercadolab_hello.hello:HelloAgent"
+```
+
+comando de verificação:
+
+```bash
+pip install mercadolab-hello
+mercadolab plugins
 ```
 
 No runtime, `mercadolab` carregará automaticamente:
