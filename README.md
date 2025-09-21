@@ -107,22 +107,6 @@ Agent = plugins["meu-agente"]
 
 ---
 
-## 📁 Estrutura
-
-```git
-mercadolab/
-  └─ src/mercadolab/
-      ├─ cli.py
-      ├─ core/
-      │  ├─ agent.py
-      │  ├─ market.py
-      │  └─ simulation.py
-      └─ plugins/
-         └─ random_trader.py
-```
-
----
-
 ## 🧰 Desenvolvimento
 
 - Lint: `ruff check .`  
