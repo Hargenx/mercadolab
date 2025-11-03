@@ -2,19 +2,21 @@
 
 ![Logo da Framework](./assets/img/file.svg "MercadoLab")
 
-**Laboratório de simulações baseadas em agentes para mercados.**  
-Crie cenários, teste estratégias e estude dinâmicas de preço com um framework **plugável**, leve e “pip‑friendly”.
+**Framework minimalista de componentes para simulações baseadas em agentes em mercados financeiros artificiais.**  
+MercadoLab fornece blocos fundamentais de ABM + execução paralela eficiente, sem impor microestrutura.  
+Você define a teoria. O framework executa os agentes em paralelo.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Python >=3.10](https://img.shields.io/badge/python-%3E%3D3.10-blue.svg)](https://www.python.org/downloads/release/python-3100/) [![PyPI](https://img.shields.io/pypi/v/mercadolab)](https://pypi.org/project/mercadolab/) [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/mercadolab)](https://pypi.org/project/mercadolab/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Python >=3.11](https://img.shields.io/badge/python-%3E%3D3.11-blue.svg)](https://www.python.org/downloads/release/python-3110/) [![PyPI](https://img.shields.io/pypi/v/mercadolab)](https://pypi.org/project/mercadolab/) [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/mercadolab)](https://pypi.org/project/mercadolab/)
 
 ---
 
 ## ✨ Destaques
 
-- **Arquitetura de plugins**: registre agentes via *entry points* (`mercadolab.plugins`).  
-- **API simples**: `Simulation` + `Market` + `BaseAgent` para loops claros e extensíveis.  
-- **Sem dependências pesadas**: `numpy` e `pandas` como base; `matplotlib` (opcional) para gráficos.  
-- **CLI**: `mercadolab quickstart` roda um exemplo funcional em segundos.
+- **Base conceitual mínima e estável**: Ativo, Tempo, Dinheiro, Side, Investidor.
+- **Execução paralela de decisões**: `ParallelScheduler` com `ThreadPoolExecutor`.
+- **Não impõe microestrutura**: sem Simulation, sem Market, sem Order Book — o pesquisador decide.
+- **Foco em pesquisa**: reduz contaminação epistemológica na modelagem.
+- **Performance**: ~40 ms/tick com ~1000 agentes (run_tick) / ~24 ms/tick (decide_only).
 
 ---
 
@@ -24,7 +26,7 @@ Crie cenários, teste estratégias e estude dinâmicas de preço com um framewor
 pip install mercadolab
 ```
 
-> **Nota**: durante o desenvolvimento local, você pode usar instalação editable:
+> **Nota**: para desenvolvimento local:
 
 ```bash
 git clone https://github.com/Hargenx/mercadolab
@@ -34,125 +36,114 @@ pip install -e ".[dev]"
 
 ---
 
-## 🧪 Comece em 10 segundos (CLI)
+## 🧪 Padrão de Uso (essência da API pública)
 
-```bash
-mercadolab quickstart --steps 50 --seed 42
+```python
+from mercadolab import Ativo, Tempo, Side, Investidor
+from mercadolab.internal.engine import make_executor, ParallelScheduler
+
+class Buyer(Investidor):
+    def decidir(self, ativo, tempo):
+        return Side.BUY
+
+class Seller(Investidor):
+    def decidir(self, ativo, tempo):
+        return Side.SELL
+
+ativos = [Ativo("AAA11")]
+investidores = [Buyer("b","BRL"), Seller("s","BRL")]
+
+def price_fn(ativo, tempo):
+    return 100.0
+
+with make_executor("thread", max_workers=8) as ex:
+    sched = ParallelScheduler(executor=ex, price_fn=price_fn)
+    trades = sched.run_tick(Tempo(1), ativos, investidores)
 ```
 
-Saída esperada: últimas linhas de um `DataFrame` com preço e estados dos agentes.
+Conceitos centrais:
 
-Liste plugins detectados:
-
-```bash
-mercadolab plugins
-```
-
-Rode uma simulação mínima (sem plugins):
-
-```bash
-mercadolab run --steps 50 --n-agents 3 --price0 100
-```
+- `Investidor.decidir(ativo, tempo) -> Side`: única obrigatoriedade.
+- MercadoLab não define “motor de mercado” — apenas as peças-base.
 
 ---
 
-## 📦 API Essencial
+## 🔬 Motivação científica
 
-```python
-from mercadolab.core.simulation import Simulation
-from mercadolab.core.market import Market
-from mercadolab.core.investidor import Investidor, Ordem
+Frameworks que já trazem mercado embutido impõem teoria.
+MercadoLab mantém a microestrutura como variável — e não como premissa.
 
-class MeuInvestidor(Investidor):
-    def decide(self, market: Market):
-        # Lógica de decisão do agente
-        return Ordem(agent=self, side="buy", qty=0.5)
+Ideal para:
 
-sim = Simulation(seed=42)
-sim.add_agent(MeuInvestidor(name="alice"))
-sim.run(steps=100)
-df = sim.to_frame()
-print(df.tail())
-```
-
-**Conceitos:**
-
-- `Investidor.decide(market) -> Ordem | None`: onde a “estratégia” acontece (retorne `None` se não negociar no tick).
-- `Market`: evolui o preço (processo simples) e executa ordens a mercado.
-- `Simulation`: orquestra o loop, coleta *logs* e exporta um `pandas.DataFrame`.
-
----
-
-## 🔌 Plugins (entry points)
-
-Declare seu agente como *plugin* no `pyproject.toml` do seu pacote:
-
-```toml
-[project.entry-points."mercadolab.plugins"]
-hello = "mercadolab_hello.hello:HelloAgent"
-```
-
-- Publique agentes externos como plugins detectados automaticamente.
-
-comando de verificação:
-
-```bash
-pip install mercadolab-hello
-mercadolab plugins
-```
-
-No runtime, `mercadolab` carregará automaticamente:
-
-```python
-from mercadolab.plugins import load_plugins
-plugins = load_plugins()
-Agent = plugins["meu-agente"]
-```
-
-> Dica: publique seus plugins com o prefixo **`mercadolab-`** (ex.: `mercadolab-fiis`) para facilitar descoberta.
+- calibração
+- experimentos ABM puros
+- replicação de artigos
+- teses / dissertações sobre dinâmica de preço artificial
 
 ---
 
 ## 🧰 Desenvolvimento
 
-- Lint: `ruff check .`  
-- Testes: `pytest`  
+- Lint: `ruff check .`
+- Testes: `pytest`
 - Tipagem (opcional): `mypy src/mercadolab`
 
 ---
 
 ## 🗺️ Roadmap (curto prazo)
 
-- [ ] Suporte a múltiplos ativos e *order types* (limit/stop).  
-- [ ] Métricas e *reporting* (PnL, Sharpe, drawdown).  
-- [ ] Hooks de eventos (pré/pós-tick).  
-- [ ] *Backtesting* com dados reais (adaptação em `datasets`).  
+- [ ] `chunk_size` auto-tuning para scheduler
+- [ ] métricas auxiliares (opcionais) sem impor microestrutura
+- [ ] hooks de instrumentação (opt-in)
+- [ ] camada opcional de coleta de estatísticas sem Book
 
 ---
 
 ## 🤝 Contribuindo
 
-Veja [CONTRIBUTING.md](CONTRIBUTING.md) e nosso [Código de Conduta](CODE_OF_CONDUCT.md).  
-Bugs e ideias: **Issues** no GitHub.
+Veja CONTRIBUTING.md e nosso Código de Conduta.
+Sugestões / discussões: Issues no GitHub.
 
 ---
 
 ## 📜 Licença
 
-[MIT](LICENSE).
+MIT.
 
 ---
 
 ## 📚 Citar
 
-Se este projeto te ajudou em artigos/relatórios, cite como:
+Sanches de Jesus, Raphael Mauricio (2025).
+MercadoLab — framework baseado em agentes para mercados artificiais.
+GitHub: [https://github.com/Hargenx/mercadolab](https://github.com/Hargenx/mercadolab)
 
-```bibtex
-@software{mercadolab_2025,
-  title   = {MercadoLab: laboratório de simulações baseadas em agentes para mercados},
-  author  = {Sanches de Jesus, Raphael Mauricio},
-  year    = {2025},
-  url     = {https://github.com/Hargenx/mercadolab},
-  version = {0.1.0}
-}
-```
+---
+
+## 2) CHANGELOG.md – rastreabilidade formal 0.2.0 → 0.3.0
+
+```markdown
+# MercadoLab – CHANGELOG
+
+## 0.3.0 (breaking change / redesign)
+
+### Removido
+- Removido `Simulation`.
+- Removido `Market`.
+- Removido `Order` / `Ordem`.
+- Removida API orientada a DataFrame.
+- Removida CLI (`mercadolab quickstart`, `mercadolab run`, etc.).
+
+### Adicionado
+- API pública minimalista e estável: `Ativo`, `Tempo`, `Dinheiro`, `Side`, `Investidor`.
+- Scheduler paralelo: `ParallelScheduler` + `make_executor`.
+- Dois modos formais de operação:
+  - `run_tick` (pares BUY/SELL)
+  - `decide_only_tick` (medição pura BUY/SELL sem transações)
+
+### Alterado
+- baseline Python passou a ser >= 3.11
+- reposicionamento metodológico: framework passa a ser “caixa de blocos” para pesquisa ABM
+
+### Justificativa
+Remoção de microestrutura implícita evita contaminação epistemológica e melhora reprodutibilidade científica.
