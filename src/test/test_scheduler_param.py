@@ -21,8 +21,8 @@ def price_fn(ativo: Ativo, tempo: Tempo) -> float:
 def test_scheduler(mode):
     ativos = [Ativo("AAA11")]
     investidores = [
-        Buyer("i1", "Alice", Dinheiro("BRL", 1000)),
-        Seller("i2", "Eve", Dinheiro("BRL", 800)),
+        Buyer("i1", "Raphael", Dinheiro("BRL", 1000)),
+        Seller("i2", "Caroline", Dinheiro("BRL", 800)),
     ]
     tempo = Tempo(1)
 
