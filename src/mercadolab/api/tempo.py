@@ -1,16 +1,17 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
 
 
 @dataclass(frozen=True, slots=True)
 class Tempo:
-    """Marcador temporal da simulacao."""
+    """Representa um instante discreto de tempo na simulação."""
 
     tick: int
 
-    # Métodos sugeridos na UML
-    def atual(self) -> int:
-        return self.tick
+    def __post_init__(self) -> None:
+        if self.tick < 0:
+            raise ValueError("O tick não pode ser negativo.")
 
     def proximo(self) -> "Tempo":
         return Tempo(self.tick + 1)

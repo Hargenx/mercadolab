@@ -1,54 +1,52 @@
-from __future__ import annotations  # <- evita avaliar hints em runtime
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from .dinheiro import Dinheiro
 from .ativo import Ativo
-from .tempo import Tempo
+from .dinheiro import Dinheiro
 from .enums import Side
+from .tempo import Tempo
 
-if TYPE_CHECKING:  # <- só para editores/mypy; não roda em runtime
+if TYPE_CHECKING:
     from .transacao import Transacao
 
 
 @dataclass(slots=True)
-class Investidor:
+class Investidor(ABC):
     """
-    <<role>> — agente do framework. Subtipos refletem a UML.
+    Agente base do framework para cenários de mercado.
+
+    Subclasses devem implementar a lógica de decisão do investidor.
     """
 
     id: str
     nome: str
     carteira: Dinheiro
-    carreira: str = ""
+    perfil: str = ""
 
-    def decidir(self, ativo: Ativo, tempo: Tempo) -> Side:  # abstract na UML
-        raise NotImplementedError("Subclasses devem implementar decidir().")
+    @abstractmethod
+    def decidir(self, ativo: Ativo, tempo: Tempo) -> Side:
+        """
+        Retorna a ação do investidor para um ativo em um dado instante.
+        """
+        ...
 
-    def onTransacao(
-        self, trans: Transacao
-    ) -> None:  # hint funciona por causa do TYPE_CHECKING
-        """Hook para reagir a execucoes."""
-        return None
+    def on_transacao(self, transacao: Transacao) -> None:
+        """
+        Hook executado após uma transação envolvendo o investidor.
+        """
+        pass
 
     def creditar(self, valor: Dinheiro) -> None:
-        if not self.carteira.igualMoeda(valor):
-            raise ValueError("Moedas diferentes")
+        self._validar_mesma_moeda(valor)
         self.carteira = self.carteira.adicionar(valor)
 
     def debitar(self, valor: Dinheiro) -> None:
-        if not self.carteira.igualMoeda(valor):
-            raise ValueError("Moedas diferentes")
+        self._validar_mesma_moeda(valor)
         self.carteira = self.carteira.subtrair(valor)
 
-
-class Fundamentalista(Investidor):
-    pass
-
-
-class Especulativo(Investidor):
-    pass
-
-
-class Ruido(Investidor):
-    pass
+    def _validar_mesma_moeda(self, valor: Dinheiro) -> None:
+        if not self.carteira.mesma_moeda(valor):
+            raise ValueError("A operação requer valores na mesma moeda.")

@@ -1,189 +1,184 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Sequence, Callable, Dict, Tuple, Optional
-from collections import deque
-from concurrent.futures import Executor
+from concurrent.futures import Executor, ThreadPoolExecutor
+from dataclasses import dataclass, field
+from typing import Callable
 
-from ...api.tempo import Tempo
 from ...api.ativo import Ativo
+from ...api.dinheiro import Dinheiro
 from ...api.enums import Side
 from ...api.investidor import Investidor
+from ...api.mercado import Mercado
+from ...api.tempo import Tempo
 from ...api.transacao import Transacao
-from ..market import Mercado
 
-PriceFunc = Callable[[Ativo, Tempo], float]
+
+PriceFunction = Callable[[Ativo, Tempo, Mercado], float]
+
+
+def _decidir_par(par: tuple[Investidor, Ativo], tempo: Tempo) -> Side:
+    investidor, ativo = par
+    return investidor.decidir(ativo, tempo)
 
 
 @dataclass(slots=True)
 class ParallelScheduler:
-    executor: Executor
-    price_fn: Optional[PriceFunc] = None
-    mercado: Optional[Mercado] = None
-    max_pair: int | None = None
-    notify_hooks_in_parallel: bool = False
-    enforce_cash: bool = False  # se True, BUY exige carteira suficiente
+    """
+    Orquestra decisões de investidores e gera transações para um dado instante.
 
-    def _price(self, ativo: Ativo, tempo: Tempo, cache: Dict[str, float]) -> float:
-        ticker = ativo.ticker
-        p = cache.get(ticker)
-        if p is not None:
-            return p
+    O scheduler não impõe microestrutura complexa: ele apenas coleta decisões,
+    agrupa intenções de compra e venda por ativo e executa pareamentos simples.
+    """
 
-        if self.mercado is not None:
-            p = self.mercado.get_price(ativo, tempo)
-        elif self.price_fn is not None:
-            p = self.price_fn(ativo, tempo)
-        else:
-            raise RuntimeError(
-                "ParallelScheduler: defina 'mercado' ou 'price_fn' para obter preço."
-            )
+    mercado: Mercado
+    investidores: tuple[Investidor, ...]
+    executor: Executor = field(default_factory=ThreadPoolExecutor)
 
-        cache[ticker] = p
-        return p
-
-    def run_tick(
+    def executar_passo(
         self,
         tempo: Tempo,
-        ativos: Sequence[Ativo],
-        investidores: Sequence[Investidor],
+        *,
+        price_fn: PriceFunction,
+        enforce_cash: bool = True,
     ) -> list[Transacao]:
-        # 1) Decidir em paralelo (ordem preservada)
-        pairs = [(inv, ativo) for ativo in ativos for inv in investidores]
-        decisions = list(self.executor.map(lambda p: p[0].decidir(p[1], tempo), pairs))
+        """
+        Executa um passo da simulação para todos os ativos do mercado.
 
-        trades: list[Transacao] = []
-        price_cache: Dict[str, float] = {}
-        n_invest = len(investidores)
+        Parameters
+        ----------
+        tempo:
+            Instante atual da simulação.
+        price_fn:
+            Função que calcula o preço de um ativo em um dado instante.
+        enforce_cash:
+            Se verdadeiro, impede compra quando o investidor não possui saldo suficiente.
 
-        for a_idx, ativo in enumerate(ativos):
-            start = a_idx * n_invest
-            end = start + n_invest
+        Returns
+        -------
+        list[Transacao]
+            Lista de transações executadas no passo atual.
+        """
+        ativos = self.mercado.listar_ativos()
+        if not ativos or not self.investidores:
+            return []
 
-            buys: deque[Investidor] = deque()
-            sells: deque[Investidor] = deque()
+        pares = tuple(
+            (investidor, ativo) for investidor in self.investidores for ativo in ativos
+        )
+        lados = list(self.executor.map(lambda par: _decidir_par(par, tempo), pares))
 
-            for i in range(start, end):
-                side = decisions[i]
-                inv = pairs[i][0]
-                if side is Side.BUY:
-                    buys.append(inv)
-                elif side is Side.SELL:
-                    sells.append(inv)
+        decisoes_por_ativo: dict[str, list[tuple[Investidor, Side]]] = {
+            ativo.ticker: [] for ativo in ativos
+        }
 
-            # Pareamento
-            n_pairs = min(len(buys), len(sells))
-            if self.max_pair is not None:
-                n_pairs = min(n_pairs, self.max_pair)
-            if n_pairs == 0:
+        for (investidor, ativo), lado in zip(pares, lados, strict=True):
+            decisoes_por_ativo[ativo.ticker].append((investidor, lado))
+
+        transacoes: list[Transacao] = []
+
+        for ativo in ativos:
+            decisoes = decisoes_por_ativo[ativo.ticker]
+            compradores = [
+                investidor for investidor, lado in decisoes if lado is Side.BUY
+            ]
+            vendedores = [
+                investidor for investidor, lado in decisoes if lado is Side.SELL
+            ]
+
+            if not compradores or not vendedores:
                 continue
 
-            # Preço por ativo no tick
-            price = self._price(ativo, tempo, price_cache)
+            preco = price_fn(ativo, tempo, self.mercado)
+            transacoes_ativo = self._executar_pareamentos(
+                ativo=ativo,
+                tempo=tempo,
+                preco=preco,
+                compradores=compradores,
+                vendedores=vendedores,
+                enforce_cash=enforce_cash,
+            )
+            transacoes.extend(transacoes_ativo)
 
-            # Se enforce_cash, filtre/valide compradores com saldo
-            if self.enforce_cash:
-                # Reconstroi filas considerando saldo (simples: 1 unidade)
-                # Obs.: SELL não valida estoque porque o core é neutro (sem inventário no núcleo).
-                filtered_buys: deque[Investidor] = deque()
-                needed = 1 * price  # 1 unidade
-                while buys:
-                    b = buys.pop()
-                    try:
-                        # “Sonda” saldo chamando método público do investidor (sem debitar aqui)
-                        # A regra concreta de saldo está no Investidor (creditar/debitar/valor atual).
-                        # Para manter neutralidade, tentamos debitar e reverter se OK.
-                        b.debitar(
-                            type(b).carteira.__class__(b.carteira.moeda, 0.0)
-                        )  # no-op?
-                        # Checa se teria dinheiro suficiente (inspira-se em interface Dinheiro)
-                        if b.carteira.valor >= needed and b.carteira.moeda:
-                            filtered_buys.append(b)
-                        # Restaura (não mudou nada; se sua Dinheiro debitar exige >0, adapte teste abaixo)
-                    except Exception:
-                        # Se não conseguir interagir, assume que não há saldo suficiente
-                        pass
-                buys = filtered_buys
-                n_pairs = min(len(buys), len(sells))
-                if self.max_pair is not None:
-                    n_pairs = min(n_pairs, self.max_pair)
-                if n_pairs == 0:
-                    continue
+        return transacoes
 
-            # Gera transações
-            for i_pair in range(n_pairs):
-                b_inv = buys.pop()
-                s_inv = sells.pop()
-                t_b = Transacao(
-                    id=f"tx-{tempo.tick}-{ativo.ticker}-b{i_pair}",
-                    trader=b_inv,
-                    asset=ativo,
-                    clock=tempo,
-                    lado=Side.BUY,
-                    preco=price,
-                    quantidade=1,
-                    ordemId="",
-                )
-                t_s = Transacao(
-                    id=f"tx-{tempo.tick}-{ativo.ticker}-s{i_pair}",
-                    trader=s_inv,
-                    asset=ativo,
-                    clock=tempo,
-                    lado=Side.SELL,
-                    preco=price,
-                    quantidade=1,
-                    ordemId="",
-                )
-                # Efeitos financeiros mínimos (opt-in via enforce_cash)
-                if self.enforce_cash:
-                    try:
-                        # BUY debita, SELL credita 1*price — política mínima (sem inventário no core)
-                        b_inv.debitar(
-                            type(b_inv).carteira.__class__(b_inv.carteira.moeda, price)
-                        )
-                        s_inv.creditar(
-                            type(s_inv).carteira.__class__(s_inv.carteira.moeda, price)
-                        )
-                    except Exception:
-                        # Se falhar, descarta par (não cria transações)
-                        continue
+    def _executar_pareamentos(
+        self,
+        *,
+        ativo: Ativo,
+        tempo: Tempo,
+        preco: float,
+        compradores: list[Investidor],
+        vendedores: list[Investidor],
+        enforce_cash: bool,
+    ) -> list[Transacao]:
+        """
+        Executa pareamentos simples 1-para-1 entre compradores e vendedores.
 
-                trades.append(t_b)
-                trades.append(t_s)
+        Cada pareamento gera duas transações:
+        - uma do lado comprador
+        - uma do lado vendedor
+        """
+        transacoes: list[Transacao] = []
+        quantidade_pares = min(len(compradores), len(vendedores))
 
-        # Notificações
-        if not trades:
-            return trades
+        for indice in range(quantidade_pares):
+            comprador = compradores[indice]
+            vendedor = vendedores[indice]
 
-        if self.notify_hooks_in_parallel:
-            list(self.executor.map(lambda tx: safe_hook(tx.trader, tx), trades))
-        else:
-            for tx in trades:
-                safe_hook(tx.trader, tx)
+            if comprador is vendedor:
+                continue
 
-        return trades
+            valor_unitario = Dinheiro(comprador.carteira.moeda, preco)
 
-    def decide_only_tick(
-        self, tempo: Tempo, ativos: Sequence[Ativo], investidores: Sequence[Investidor]
-    ) -> Dict[str, Tuple[int, int]]:
-        pairs = [(inv, ativo) for ativo in ativos for inv in investidores]
-        decisions = list(self.executor.map(lambda p: p[0].decidir(p[1], tempo), pairs))
-        counts: Dict[str, Tuple[int, int]] = {}
-        n_invest = len(investidores)
-        for a_idx, ativo in enumerate(ativos):
-            start = a_idx * n_invest
-            end = start + n_invest
-            b = s = 0
-            for i in range(start, end):
-                d = decisions[i]
-                b += d is Side.BUY
-                s += d is Side.SELL
-            counts[ativo.ticker] = (b, s)
-        return counts
+            if enforce_cash and comprador.carteira.valor < valor_unitario.valor:
+                continue
+
+            comprador.debitar(valor_unitario)
+            vendedor.creditar(Dinheiro(vendedor.carteira.moeda, preco))
+
+            transacao_compra = Transacao(
+                id=f"tx-{tempo.tick}-{ativo.ticker}-c-{indice}",
+                investidor=comprador,
+                ativo=ativo,
+                tempo=tempo,
+                lado=Side.BUY,
+                preco=preco,
+                quantidade=1,
+                ordem_id="",
+            )
+
+            transacao_venda = Transacao(
+                id=f"tx-{tempo.tick}-{ativo.ticker}-v-{indice}",
+                investidor=vendedor,
+                ativo=ativo,
+                tempo=tempo,
+                lado=Side.SELL,
+                preco=preco,
+                quantidade=1,
+                ordem_id="",
+            )
+
+            transacoes.append(transacao_compra)
+            transacoes.append(transacao_venda)
+
+            self._notificar_transacao(comprador, transacao_compra)
+            self._notificar_transacao(vendedor, transacao_venda)
+
+        return transacoes
+
+    @staticmethod
+    def _notificar_transacao(investidor: Investidor, transacao: Transacao) -> None:
+        """
+        Executa o hook pós-transação do investidor de forma tolerante a falhas.
+        """
+        try:
+            investidor.on_transacao(transacao)
+        except Exception:
+            pass
 
 
-def safe_hook(inv: Investidor, tx: Transacao) -> None:
-    try:
-        inv.onTransacao(tx)
-    except Exception:
-        pass
+def make_executor(max_workers: int | None = None) -> Executor:
+    """
+    Cria um executor padrão para o scheduler.
+    """
+    return ThreadPoolExecutor(max_workers=max_workers)

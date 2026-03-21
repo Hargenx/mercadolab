@@ -1,26 +1,32 @@
 from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Dict, Tuple
+
 from .ativo import Ativo
 
 
 @dataclass(slots=True)
 class Mercado:
-    """<<collective>> — compoe Ativos (UML: Mercado *-- Ativo)."""
+    """Representa um conjunto de ativos disponíveis em um cenário de mercado."""
 
     nome: str
-    _ativos: Dict[str, Ativo] = field(default_factory=dict, repr=False)
+    _ativos: dict[str, Ativo] = field(default_factory=dict, repr=False)
 
-    def adicionarAtivo(self, ativo: Ativo) -> None:
+    def adicionar_ativo(self, ativo: Ativo) -> None:
         if ativo.ticker in self._ativos:
-            raise ValueError("Ativo ja existente")
+            raise ValueError(f"Já existe um ativo com ticker '{ativo.ticker}'.")
         self._ativos[ativo.ticker] = ativo
 
-    def removerAtivo(self, ticker: str) -> None:
+    def remover_ativo(self, ticker: str) -> None:
+        if ticker not in self._ativos:
+            raise KeyError(f"Ativo não encontrado: {ticker}")
         self._ativos.pop(ticker)
 
-    def obterAtivo(self, ticker: str) -> Ativo:
-        return self._ativos[ticker]
+    def obter_ativo(self, ticker: str) -> Ativo:
+        try:
+            return self._ativos[ticker]
+        except KeyError as exc:
+            raise KeyError(f"Ativo não encontrado: {ticker}") from exc
 
-    def listarAtivos(self) -> Tuple[Ativo, ...]:
+    def listar_ativos(self) -> tuple[Ativo, ...]:
         return tuple(self._ativos.values())

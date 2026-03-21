@@ -2,7 +2,7 @@ from enum import StrEnum
 
 
 class Side(StrEnum):
-    """BUY | SELL - tipo da UML para lado da transacao e decisao do investidor."""
+    """Representa o lado de uma ordem, decisão ou transação no mercado."""
 
     BUY = "buy"
     SELL = "sell"

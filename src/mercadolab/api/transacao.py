@@ -1,36 +1,43 @@
-from __future__ import annotations  # <- evita avaliar hints em runtime
+from __future__ import annotations
+
 from dataclasses import dataclass
 
-from mercadolab.api.ativo import Ativo
-from mercadolab.api.investidor import Investidor
-from mercadolab.api.tempo import Tempo
-
+from .ativo import Ativo
 from .enums import Side
-
-# NÃO importe Investidor/Ativo/Tempo em runtime para evitar ciclo
+from .investidor import Investidor
+from .tempo import Tempo
 
 
 @dataclass(frozen=True, slots=True)
 class Transacao:
-    """
-    <<event>> — liga Investidor (trader), Ativo (asset) e Tempo (clock).
-    As anotações são forward refs graças ao __future__ acima.
-    """
+    """Evento imutável que representa uma transação em um cenário de mercado."""
 
     id: str
-    trader: "Investidor"
-    asset: "Ativo"
-    clock: "Tempo"
+    investidor: Investidor
+    ativo: Ativo
+    tempo: Tempo
     lado: Side
     preco: float
     quantidade: int
-    ordemId: str = ""
+    ordem_id: str = ""
 
-    def notional(self) -> float:
+    def valor_total(self) -> float:
         return self.preco * float(self.quantidade)
 
-    def isBuy(self) -> bool:
+    def eh_compra(self) -> bool:
         return self.lado is Side.BUY
 
-    def isSell(self) -> bool:
+    def eh_venda(self) -> bool:
         return self.lado is Side.SELL
+
+    def __repr__(self) -> str:
+        return (
+            f"Transacao(id={self.id}, "
+            f"investidor={self.investidor}, "
+            f"ativo={self.ativo}, "
+            f"tempo={self.tempo}, "
+            f"lado={self.lado}, "
+            f"preco={self.preco}, "
+            f"quantidade={self.quantidade}, "
+            f"ordem_id={self.ordem_id})"
+        )
