@@ -1,7 +1,7 @@
 import mercadolab as ml
 
 
-def test_public_api_matches_uml_surface():
+def test_public_api_expoe_nucleo_estavel_do_pacote() -> None:
     assert set(ml.__all__) == {
         "Side",
         "Dinheiro",
@@ -9,8 +9,5 @@ def test_public_api_matches_uml_surface():
         "Ativo",
         "Mercado",
         "Investidor",
-        "Fundamentalista",
-        "Especulativo",
-        "Ruido",
         "Transacao",
     }

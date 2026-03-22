@@ -1,39 +1,53 @@
-# tests/test_scheduler_mercado_fallback.py
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
 
-from mercadolab.api.enums import Side
 from mercadolab.api.ativo import Ativo
-from mercadolab.api.tempo import Tempo
 from mercadolab.api.dinheiro import Dinheiro
+from mercadolab.api.enums import Side
 from mercadolab.api.investidor import Investidor
+from mercadolab.api.mercado import Mercado
+from mercadolab.api.tempo import Tempo
 from mercadolab.internal.engine.scheduler import ParallelScheduler
 
 
-class Buyer(Investidor):
-    def decidir(self, ativo, tempo):
+class Comprador(Investidor):
+    """Investidor determinístico que sempre decide comprar."""
+
+    def decidir(self, ativo: Ativo, tempo: Tempo) -> Side:
         return Side.BUY
 
 
-class Seller(Investidor):
-    def decidir(self, ativo, tempo):
+class Vendedor(Investidor):
+    """Investidor determinístico que sempre decide vender."""
+
+    def decidir(self, ativo: Ativo, tempo: Tempo) -> Side:
         return Side.SELL
 
 
-def test_scheduler_uses_price_fn_when_mercado_is_none():
-    ativos = [Ativo("BBB3")]
-    tempo = Tempo(1)
-    buyer = Buyer("b", "Buyer", Dinheiro("BRL", 1e9))
-    seller = Seller("s", "Seller", Dinheiro("BRL", 0.0))
+def test_scheduler_usa_price_fn_fornecida() -> None:
+    mercado = Mercado("mercado_teste")
+    mercado.adicionar_ativo(Ativo("BBB3"))
 
-    def price_fn(a, t):
+    tempo = Tempo(1)
+    comprador = Comprador("b", "Buyer", Dinheiro("BRL", 1e9))
+    vendedor = Vendedor("s", "Seller", Dinheiro("BRL", 0.0))
+
+    def price_fn(ativo: Ativo, tempo: Tempo, mercado: Mercado) -> float:
         return 123.45
 
-    with ThreadPoolExecutor(max_workers=2) as ex:
-        sched = ParallelScheduler(executor=ex, price_fn=price_fn, enforce_cash=True)
-        trades = sched.run_tick(tempo, ativos, [buyer, seller])
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        scheduler = ParallelScheduler(
+            mercado=mercado,
+            investidores=(comprador, vendedor),
+            executor=executor,
+        )
+        transacoes = scheduler.executar_passo(
+            tempo,
+            price_fn=price_fn,
+            enforce_cash=True,
+        )
 
-    assert len(trades) == 2
-    assert trades[0].preco == 123.45
-    assert trades[1].preco == 123.45
+    assert len(transacoes) == 2
+    assert transacoes[0].preco == 123.45
+    assert transacoes[1].preco == 123.45
