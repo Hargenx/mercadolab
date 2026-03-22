@@ -14,41 +14,43 @@ Versões anteriores, experimentais ou ramos antigos não recebem suporte de corr
 
 MercadoLab é um framework de pesquisa.
 
-Ele **não** faz:
+Ele **não** realiza, como parte obrigatória do núcleo:
 
-- rede
-- I/O externo
-- persistência
-- leitura de arquivos
-- carregamento dinâmico remoto
-- chamadas de sistema
+- comunicação de rede
+- persistência externa
+- carregamento remoto de código
+- chamadas de sistema privilegiadas
+- leitura automática de arquivos externos
 
-Portanto a superfície de ataque típica é baixa.
+Portanto, a superfície de ataque típica do núcleo é relativamente baixa.
 
-O risco primário considerado aqui é:
+Os riscos mais relevantes neste contexto estão associados a:
 
-- exceções não tratadas que permitam execução arbitrária via callback / plugin malicioso
+- callbacks e hooks definidos pelo usuário
+- executores customizados
+- extensões locais de cenário ou comportamento
+- uso inseguro de código arbitrário em camadas construídas sobre o framework
 
 ---
 
 ## Vulnerabilidades possíveis neste contexto
 
-- Execução de código via plugin (entry point mal-intencionado)
-- “side-channel leaks” em hooks se o usuário criar plugins que compartilham estado global
-- deadlocks / starvation se executor for substituído por executores não padronizados
+- execução inesperada de código por meio de extensões definidas pelo usuário
+- vazamento de estado via hooks que compartilhem variáveis globais
+- deadlocks, starvation ou comportamento indefinido com executores não padronizados
+- inconsistências de validação em componentes centrais do domínio ou da execução
 
-**Nota:** estes riscos são inerentes ao design “plugin-based” — não são considerados responsabilidade do framework base.
+**Nota:** riscos introduzidos por código externo escrito pelo próprio usuário ou por extensões locais não são, por si só, falhas do núcleo do framework. Ainda assim, comportamentos inseguros causados por contratos ambíguos, validações ausentes ou superfícies mal definidas devem ser reportados.
 
 ---
 
 ## Como reportar vulnerabilidades
 
-Se você acredita que encontrou um comportamento com impacto de segurança:
+Se você acredita que encontrou um comportamento com impacto de segurança, por favor abra uma Issue PRIVADA através de:
 
-por favor abra uma Issue PRIVADA através de:
 <https://github.com/Hargenx/mercadolab/security/advisories>
 
-ou se preferir comunicação discreta por e-mail:
+ou, se preferir comunicação discreta por e-mail:
 
 <raphael.mauricio@gmail.com>
 
@@ -66,20 +68,20 @@ Por favor inclua:
 Responsável por confirmação: mantenedor(a)
 
 Confirmação inicial: até 14 dias úteis  
-Correção (se aplicável): 15 a 45 dias úteis após repro
+Correção (se aplicável): 15 a 45 dias úteis após reprodução
 
 Vulnerabilidades serão publicadas em:
-`GitHub Security Advisories`
-e
-`CHANGELOG.md`
+
+- `GitHub Security Advisories`
+- `CHANGELOG.md`
 
 ---
 
 ## Notas finais
 
-MercadoLab não é um sistema crítico.
-É uma ferramenta para pesquisa científica.
+MercadoLab não é um sistema crítico de produção.
+É uma ferramenta voltada principalmente à pesquisa, ensino e experimentação computacional.
 
-Ainda assim — a rastreabilidade formal importa.
+Ainda assim, clareza contratual, previsibilidade e rastreabilidade continuam sendo importantes.
 
-Obrigado por colaborar para manter este projeto seguro e previsível.
+Obrigado por colaborar para manter este projeto seguro e confiável.

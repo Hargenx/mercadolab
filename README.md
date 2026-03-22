@@ -2,9 +2,9 @@
 
 ![Logo da Framework](./assets/img/file.svg "MercadoLab")
 
-**Framework minimalista de componentes para simulações baseadas em agentes em mercados financeiros artificiais.**  
-MercadoLab fornece blocos fundamentais de ABM + execução paralela eficiente, sem impor microestrutura.  
-Você define a teoria. O framework executa os agentes em paralelo.
+**Framework em Python para criação de cenários de mercados artificiais baseados em agentes.**  
+MercadoLab fornece componentes fundamentais de domínio e mecanismos de execução paralela, permitindo construir cenários experimentais sem impor uma única microestrutura de mercado.  
+Você define o cenário, as regras e a teoria. O framework oferece a base para modelar e executar.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Python >=3.11](https://img.shields.io/badge/python-%3E%3D3.11-blue.svg)](https://www.python.org/downloads/release/python-3110/) [![PyPI](https://img.shields.io/pypi/v/mercadolab)](https://pypi.org/project/mercadolab/) [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/mercadolab)](https://pypi.org/project/mercadolab/)
 
@@ -12,11 +12,11 @@ Você define a teoria. O framework executa os agentes em paralelo.
 
 ## ✨ Destaques
 
-- **Base conceitual mínima e estável**: Ativo, Tempo, Dinheiro, Side, Investidor.
-- **Execução paralela de decisões**: `ParallelScheduler` com `ThreadPoolExecutor`.
-- **Não impõe microestrutura**: sem Simulation, sem Market, sem Order Book — o pesquisador decide.
-- **Foco em pesquisa**: reduz contaminação epistemológica na modelagem.
-- **Performance**: ~40 ms/tick com ~1000 agentes (run_tick) / ~24 ms/tick (decide_only).
+- **Núcleo de domínio estável**: `Ativo`, `Tempo`, `Dinheiro`, `Side`, `Investidor`, `Mercado`, `Transacao`.
+- **Execução paralela**: `ParallelScheduler` com suporte a execução concorrente de decisões.
+- **Não impõe microestrutura específica**: sem order book obrigatório, sem formação de preço única e sem teoria econômica fixa.
+- **Foco em pesquisa e ensino**: favorece extensibilidade, experimentação e reprodutibilidade.
+- **Arquitetura modular**: separa componentes de domínio, execução e cenários.
 
 ---
 
@@ -36,42 +36,61 @@ pip install -e ".[dev]"
 
 ---
 
-## 🧪 Padrão de Uso (essência da API pública)
+## 🧪 Exemplo de uso
 
 ```python
-from mercadolab import Ativo, Tempo, Side, Investidor
-from mercadolab.internal.engine import make_executor, ParallelScheduler
+from mercadolab import Ativo, Dinheiro, Investidor, Mercado, Side, Tempo
+from mercadolab.internal.engine import ParallelScheduler, make_executor
+
 
 class Buyer(Investidor):
-    def decidir(self, ativo, tempo):
+    def decidir(self, ativo: Ativo, tempo: Tempo) -> Side:
         return Side.BUY
 
+
 class Seller(Investidor):
-    def decidir(self, ativo, tempo):
+    def decidir(self, ativo: Ativo, tempo: Tempo) -> Side:
         return Side.SELL
 
-ativos = [Ativo("AAA11")]
-investidores = [Buyer("b","BRL"), Seller("s","BRL")]
 
-def price_fn(ativo, tempo):
+def price_fn(ativo: Ativo, tempo: Tempo, mercado: Mercado) -> float:
     return 100.0
 
-with make_executor("thread", max_workers=8) as ex:
-    sched = ParallelScheduler(executor=ex, price_fn=price_fn)
-    trades = sched.run_tick(Tempo(1), ativos, investidores)
+
+mercado = Mercado("mercado_teste")
+mercado.adicionar_ativo(Ativo("AAA11"))
+
+investidores = (
+    Buyer("b1", "Buyer 1", Dinheiro("BRL", 1000.0)),
+    Seller("s1", "Seller 1", Dinheiro("BRL", 1000.0)),
+)
+
+with make_executor(max_workers=8) as executor:
+    scheduler = ParallelScheduler(
+        mercado=mercado,
+        investidores=investidores,
+        executor=executor,
+    )
+    transacoes = scheduler.executar_passo(
+        Tempo(1),
+        price_fn=price_fn,
+        enforce_cash=True,
+    )
 ```
 
 Conceitos centrais:
 
-- `Investidor.decidir(ativo, tempo) -> Side`: única obrigatoriedade.
-- MercadoLab não define “motor de mercado” — apenas as peças-base.
+- `Investidor.decidir(ativo, tempo) -> Side`: contrato central para definição do comportamento dos agentes.
+- `Mercado` organiza os ativos disponíveis no cenário.
+- `ParallelScheduler` coordena a execução das decisões e o pareamento básico de transações.
+- MercadoLab não impõe uma microestrutura fechada; ele oferece um núcleo extensível para construção de cenários.
 
 ---
 
 ## 🔬 Motivação científica
 
-Frameworks que já trazem mercado embutido impõem teoria.
-MercadoLab mantém a microestrutura como variável — e não como premissa.
+Frameworks que já trazem uma microestrutura embutida tendem a impor pressupostos teóricos ao experimento.
+O MercadoLab busca manter a microestrutura como variável de modelagem — e não como premissa fixa do framework.
 
 Ideal para:
 
@@ -102,48 +121,24 @@ Ideal para:
 ## 🤝 Contribuindo
 
 Veja CONTRIBUTING.md e nosso Código de Conduta.
-Sugestões / discussões: Issues no GitHub.
+Sugestões, dúvidas e discussões podem ser abertas via Issues no GitHub. [![CONTRIBUTING](https://img.shields.io/badge/CONTRIBUTING-grey?logo=git)](CONTRIBUTING.md) [![Code of Conduct](https://img.shields.io/badge/CODE%20OF%20CONDUCT-grey?logo=git)](CODE_OF_CONDUCT.md)
 
 ---
 
 ## 📜 Licença
 
-MIT.
+Distribuído sob a licença MIT. Veja o arquivo LICENSE para mais detalhes.[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
 
 ## 📚 Citar
 
-Sanches de Jesus, Raphael Mauricio (2025).
+Mauricio Sanches de Jesus, Raphael (2025).
 MercadoLab — framework baseado em agentes para mercados artificiais.
 GitHub: [https://github.com/Hargenx/mercadolab](https://github.com/Hargenx/mercadolab)
 
 ---
 
-## 2) CHANGELOG.md – rastreabilidade formal 0.2.0 → 0.3.0
+## 📝 Changelog
 
-```markdown
-# MercadoLab – CHANGELOG
-
-## 0.3.0 (breaking change / redesign)
-
-### Removido
-- Removido `Simulation`.
-- Removido `Market`.
-- Removido `Order` / `Ordem`.
-- Removida API orientada a DataFrame.
-- Removida CLI (`mercadolab quickstart`, `mercadolab run`, etc.).
-
-### Adicionado
-- API pública minimalista e estável: `Ativo`, `Tempo`, `Dinheiro`, `Side`, `Investidor`.
-- Scheduler paralelo: `ParallelScheduler` + `make_executor`.
-- Dois modos formais de operação:
-  - `run_tick` (pares BUY/SELL)
-  - `decide_only_tick` (medição pura BUY/SELL sem transações)
-
-### Alterado
-- baseline Python passou a ser >= 3.11
-- reposicionamento metodológico: framework passa a ser “caixa de blocos” para pesquisa ABM
-
-### Justificativa
-Remoção de microestrutura implícita evita contaminação epistemológica e melhora reprodutibilidade científica.
+O histórico de versões e mudanças arquiteturais do projeto está disponível em [`CHANGELOG.md`](CHANGELOG.md).

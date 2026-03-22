@@ -5,7 +5,7 @@
 MercadoLab é um artefato metodológico voltado para pesquisa formal em mercados artificiais, ABM e dinâmica de preços.  
 A comunidade deste projeto deve refletir padrões de conduta compatíveis com pesquisa acadêmica séria — transparência, verificabilidade, rigor, respeito e cooperação.
 
-Este documento estabelece normas mínimas para interação, colaboração e comunicação dentro do ecossistema MercadoLab (Issues, PRs, Discussions, Plugins, documentação e atividades relacionadas).
+Este documento estabelece normas mínimas para interação, colaboração e comunicação dentro do ecossistema MercadoLab (Issues, PRs, Discussions, extensões, documentação e atividades relacionadas).
 
 ## Princípios
 
@@ -18,7 +18,7 @@ Este documento estabelece normas mínimas para interação, colaboração e comu
 
 3) Clareza metodológica  
    O projeto não tutela teoria.  
-   Microestrutura é responsabilidade do usuário.  
+   O núcleo do framework não deve impor uma microestrutura única como comportamento obrigatório.  
    Propostas não devem comprometer a neutralidade epistemológica do framework.
 
 4) Respeito e cordialidade  
@@ -31,7 +31,7 @@ Este documento estabelece normas mínimas para interação, colaboração e comu
 ## Comportamentos Esperados
 
 - Criticar decisões técnicas, nunca pessoas.  
-- Apresentar benchmarks quando propor otimizações.  
+- Apresentar benchmarks quando propor otimizações relevantes.  
 - Encaminhar perguntas e propostas com contexto suficiente.  
 - Responder com paciência e máxima objetividade.
 
@@ -41,7 +41,7 @@ Este documento estabelece normas mínimas para interação, colaboração e comu
 - “argumentos de autoridade” sem evidências  
 - tentativas de impor microestrutura ao core  
 - conteúdo ofensivo, preconceituoso ou hostil  
-- sabotagem, trolling, ou RUÍDO deliberado  
+- sabotagem, trolling ou ruído deliberado  
 - PRs sem justificativa ou sem testes que alterem a hot-path
 
 ## Resolução de Conflitos
@@ -54,22 +54,20 @@ Conflitos técnicos devem ser resolvidos com:
 
 Quando não houver consenso:
 
-- a decisão final cabe ao(a) mantenedor(a) do repositório;
+- a decisão final cabe ao(à) mantenedor(a) do repositório;
 - PRs podem ser fechados com “won’t merge” mediante explicação técnica.
 
 ## Relato de Violações
 
-Violações devem ser relatadas via:
+Violações deste Código de Conduta devem ser relatadas por e-mail diretamente ao mantenedor:
 
-GitHub Security Advisories (privado)  
-ou  
-e-mail diretamente ao mantenedor:  
 <raphael.mauricio@gmail.com>
 
 ## Consequências
 
-- advertência formal (registro público)  
+- advertência formal  
 - encerramento de Issues / PRs durante o período de bloqueio  
+- limitação temporária de participação  
 - banimento permanente em caso de reincidência grave
 
 ## Nota Final
@@ -77,5 +75,5 @@ e-mail diretamente ao mantenedor:
 MercadoLab existe para facilitar ciência.  
 Todas as interações neste projeto devem aumentar clareza, não obscurecer.
 
-Comunidade científica não é platéia — é coautoria.  
+Comunidade científica não é plateia — é coautoria.  
 Ajude a preservar este padrão.

@@ -5,34 +5,42 @@ build-backend = "hatchling.build"
 [project]
 name = "mercadolab"
 version = "0.2.0"
-description = "Framework ABM para simulações de investimentos no mercado financeiro (UML-surface)."
+description = "Framework em Python para criação de cenários de mercados artificiais baseados em agentes."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [
   { name = "Raphael Mauricio Sanches de Jesus", email = "raphael.mauricio@gmail.com" },
 ]
-keywords = ["abm", "agent-based", "market", "finance", "simulation", "framework"]
+keywords = [
+  "abm",
+  "agent-based modeling",
+  "artificial markets",
+  "market simulation",
+  "computational economics",
+  "framework"
+]
 classifiers = [
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "License :: OSI Approved :: MIT License",
   "Intended Audience :: Science/Research",
+  "Topic :: Scientific/Engineering",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
   "Topic :: Office/Business :: Financial :: Investment"
 ]
-dependencies = [
-  "numpy>=1.24",
-  "pandas>=2.0",
-  "matplotlib>=3.7",
-  "scipy>=1.11",
-  "pyyaml>=6.0",
-  "statsmodels>=0.14"
-]
+dependencies = []
 
 [project.optional-dependencies]
 plot = ["matplotlib>=3.7"]
+data = [
+  "numpy>=1.24",
+  "pandas>=2.0",
+  "scipy>=1.11",
+  "statsmodels>=0.14"
+]
+config = ["pyyaml>=6.0"]
 dev = [
   "pytest>=8.0",
   "ruff>=0.6.0",
@@ -46,19 +54,6 @@ ml = ["torch>=2.2", "gymnasium>=0.29", "stable-baselines3>=2.3"]
 Homepage = "https://github.com/Hargenx/mercadolab"
 Issues = "https://github.com/Hargenx/mercadolab/issues"
 
-[project.scripts]
-mercadolab = "mercadolab.cli:main"
-mlab = "mercadolab.cli:main"
-
-# Plugins (entry points públicos)
-[project.entry-points."mercadolab.plugins"]
-investidor_fundamentalista = "mercadolab.plugins.investidor_fundamentalista:Factory"
-investidor_tendencia      = "mercadolab.plugins.investidor_tendencia:Factory"
-investidor_ruido          = "mercadolab.plugins.investidor_ruido:Factory"
-mercado_simples           = "mercadolab.plugins.mercado_simples:Factory"
-random-trader             = "mercadolab.plugins.random_trader:RandomTrader"
-
-# ---------- Hatch (src layout) ----------
 [tool.hatch.build.targets.wheel]
 packages = ["src/mercadolab"]
 
@@ -71,7 +66,6 @@ include = [
   "tests/**"
 ]
 
-# ---------- Lint / typecheck / tests ----------
 [tool.ruff]
 line-length = 100
 target-version = "py311"
