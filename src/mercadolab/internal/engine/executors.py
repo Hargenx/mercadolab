@@ -1,11 +1,8 @@
 from __future__ import annotations
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, Executor
-from typing import Literal
+
+from concurrent.futures import Executor, ThreadPoolExecutor
 
 
-def make_executor(
-    kind: Literal["thread", "process"] = "thread", max_workers: int | None = None
-) -> Executor:
-    if kind == "process":
-        return ProcessPoolExecutor(max_workers=max_workers)
+def make_executor(max_workers: int | None = None) -> Executor:
+    """Cria o executor padrão utilizado pelo scheduler."""
     return ThreadPoolExecutor(max_workers=max_workers)
