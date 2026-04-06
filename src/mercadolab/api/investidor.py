@@ -1,52 +1,52 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from dataclasses import dataclass, field
+from decimal import Decimal
+from uuid import UUID, uuid4
 
-from .ativo import Ativo
-from .dinheiro import Dinheiro
-from .enums import Side
-from .tempo import Tempo
-
-if TYPE_CHECKING:
-    from .transacao import Transacao
+from mercadolab.api.ativo import Ativo
+from mercadolab.api.carteira import Carteira
+from mercadolab.api.ordem import LadoOrdem, Ordem, TipoOrdem
+from mercadolab.api.tempo import Tempo
 
 
 @dataclass(slots=True)
-class Investidor(ABC):
-    """
-    Agente base do framework para cenários de mercado.
+class Investidor:
+    """Representa um participante do mercado simulado."""
 
-    Subclasses devem implementar a lógica de decisão do investidor.
-    """
-
-    id: str
     nome: str
-    carteira: Dinheiro
-    perfil: str = ""
+    carteira: Carteira = field(default_factory=Carteira)
+    ativo: bool = True
+    id: UUID = field(default_factory=uuid4)
 
-    @abstractmethod
-    def decidir(self, ativo: Ativo, tempo: Tempo) -> Side:
-        """
-        Retorna a ação do investidor para um ativo em um dado instante.
-        """
-        ...
+    def __post_init__(self) -> None:
+        if not self.nome.strip():
+            raise ValueError("nome não pode ser vazio.")
 
-    def on_transacao(self, transacao: Transacao) -> None:
-        """
-        Hook executado após uma transação envolvendo o investidor.
-        """
-        pass
+    def ativar(self) -> None:
+        self.ativo = True
 
-    def creditar(self, valor: Dinheiro) -> None:
-        self._validar_mesma_moeda(valor)
-        self.carteira = self.carteira.adicionar(valor)
+    def desativar(self) -> None:
+        self.ativo = False
 
-    def debitar(self, valor: Dinheiro) -> None:
-        self._validar_mesma_moeda(valor)
-        self.carteira = self.carteira.subtrair(valor)
+    def emitir_ordem(
+        self,
+        ativo: Ativo,
+        lado: LadoOrdem,
+        tipo: TipoOrdem,
+        quantidade: int,
+        tempo: Tempo,
+        preco_limite: Decimal | None = None,
+    ) -> Ordem:
+        if not self.ativo:
+            raise ValueError("investidor inativo não pode emitir ordens.")
 
-    def _validar_mesma_moeda(self, valor: Dinheiro) -> None:
-        if not self.carteira.mesma_moeda(valor):
-            raise ValueError("A operação requer valores na mesma moeda.")
+        return Ordem(
+            investidor=self,
+            ativo=ativo,
+            lado=lado,
+            tipo=tipo,
+            quantidade=quantidade,
+            tempo=tempo,
+            preco_limite=preco_limite,
+        )

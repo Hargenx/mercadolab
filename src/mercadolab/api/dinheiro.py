@@ -6,7 +6,6 @@ from dataclasses import dataclass
 @dataclass(frozen=True, slots=True)
 class Dinheiro:
     """Objeto de valor que representa uma quantia monetária em uma moeda."""
-
     moeda: str
     valor: float
 
