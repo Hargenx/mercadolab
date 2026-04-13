@@ -1,16 +1,17 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from collections.abc import Sequence
 import random
 
-from ..api.ativo import Ativo, TipoAtivo
-from ..api.carteira import Carteira
-from ..api.investidor import Investidor
-from ..api.mercado import Mercado
-from ..api.ordem import LadoOrdem, TipoOrdem
-from ..api.posicao import Posicao
-from ..api.simulacao import Simulacao
-from ..api.tempo import Tempo
+from mercadolab.api.ativo import Ativo, TipoAtivo
+from mercadolab.api.carteira import Carteira
+from mercadolab.api.investidor import Investidor
+from mercadolab.api.mercado import Mercado
+from mercadolab.api.ordem import LadoOrdem, TipoOrdem
+from mercadolab.api.posicao import Posicao
+from mercadolab.api.simulacao import Simulacao
+from mercadolab.api.tempo import Tempo
 
 # ============================================================
 # CONFIGURAÇÃO DO CENÁRIO
@@ -67,7 +68,7 @@ def criar_investidores(ativo: Ativo, total: int = 100) -> list[Investidor]:
 # O MercadoLab não impõe como os agentes decidem; esta lógica pode ser
 # substituída por qualquer outra definida pelo usuário.
 def gerar_ordens_para_tick(
-    investidores: list[Investidor],
+    investidores: Sequence[Investidor],
     ativo: Ativo,
     tempo: Tempo,
 ) -> list:
@@ -125,7 +126,7 @@ def gerar_ordens_para_tick(
 
 
 def resumo_investidores(
-    investidores: list[Investidor],
+    investidores: Sequence[Investidor],
     ativo: Ativo,
     limite: int = 12,
 ) -> None:
