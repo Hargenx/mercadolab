@@ -2,22 +2,27 @@
 
 ![Logo da Framework](./assets/img/file.svg "MercadoLab")
 
-**Framework em Python para criação de cenários de mercados artificiais baseados em agentes.**  
-MercadoLab fornece componentes fundamentais de domínio e mecanismos de execução paralela, permitindo construir cenários experimentais sem impor uma única microestrutura de mercado.  
-Você define o cenário, as regras e a teoria. O framework oferece a base para modelar e executar.
+**Framework em Python para construção de cenários de mercados artificiais baseados em agentes.**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Python >=3.11](https://img.shields.io/badge/python-%3E%3D3.11-blue.svg)](https://www.python.org/downloads/release/python-3110/) [![PyPI](https://img.shields.io/pypi/v/mercadolab)](https://pypi.org/project/mercadolab/) [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/mercadolab)](https://pypi.org/project/mercadolab/)
+O MercadoLab fornece um núcleo de domínio enxuto para modelar instrumentos negociáveis, participantes, ordens, transações, livros de ofertas, mercado e simulação temporal, sem impor uma única teoria comportamental, microestrutura fixa ou estratégia de decisão.
+
+A proposta da framework é simples: **oferecer a infraestrutura para que outros desenvolvam seus próprios mercados artificiais**, como mercados de FIIs, criptoativos, ações ou cenários híbridos, mantendo em aberto regras de negociação, comportamento dos agentes e hipóteses experimentais.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python >=3.11](https://img.shields.io/badge/python-%3E%3D3.11-blue.svg)](https://www.python.org/downloads/release/python-3110/)
+[![PyPI](https://img.shields.io/pypi/v/mercadolab)](https://pypi.org/project/mercadolab/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/mercadolab)](https://pypi.org/project/mercadolab/)
 
 ---
 
 ## ✨ Destaques
 
-- **Núcleo de domínio estável**: `Ativo`, `Tempo`, `Dinheiro`, `Side`, `Investidor`, `Mercado`, `Transacao`.
-- **Execução paralela**: `ParallelScheduler` com suporte a execução concorrente de decisões.
-- **Não impõe microestrutura específica**: sem order book obrigatório, sem formação de preço única e sem teoria econômica fixa.
-- **Foco em pesquisa e ensino**: favorece extensibilidade, experimentação e reprodutibilidade.
-- **Arquitetura modular**: separa componentes de domínio, execução e cenários.
-- **Cenários de referência**: inclui cenários básicos e adaptativos construídos sobre o núcleo da framework.
+- **Núcleo de domínio explícito**: `Ativo`, `Tempo`, `Investidor`, `Carteira`, `Posicao`, `Ordem`, `Transacao`, `LivroDeOfertas`, `Mercado` e `Simulacao`.
+- **Simulação neutra**: a framework coordena tempo e submissão de ordens sem impor estratégias ou políticas de decisão.
+- **Microestrutura aberta**: permite construir diferentes tipos de mercado sobre a mesma base.
+- **Foco em extensibilidade**: adequada para pesquisa, ensino, prototipação e experimentação.
+- **Arquitetura modular**: separa claramente domínio, negociação e orquestração temporal.
+- **Exemplos executáveis**: inclui exemplos mínimos e de simulação anual para demonstrar o uso da framework.
 
 ---
 
@@ -25,198 +30,260 @@ Você define o cenário, as regras e a teoria. O framework oferece a base para m
 
 ```bash
 pip install mercadolab
-```
+````
 
-> **Nota**: para desenvolvimento local:
+### Desenvolvimento local
 
-```bash
-git clone https://github.com/Hargenx/mercadolab
+````bash
+git clone https://github.com/Hargenx/mercadolab.git
 cd mercadolab
 pip install -e ".[dev]"
-```
+````
 
 ---
 
-## 🧪 Exemplo de uso
+## 🧱 Núcleo da framework
 
-```python
-from mercadolab import Ativo, Dinheiro, Investidor, Mercado, Side, Tempo
-from mercadolab.internal.engine import ParallelScheduler, make_executor
+O núcleo atual da framework é composto pelas seguintes classes públicas:
 
+- `Ativo`: representa o instrumento negociável.
+- `Tempo`: representa o instante discreto da simulação.
+- `Investidor`: representa o participante do mercado.
+- `Carteira`: representa o estado patrimonial do participante.
+- `Posicao`: representa a quantidade mantida de um ativo.
+- `Ordem`: representa a instrução de compra ou venda.
+- `Transacao`: representa a execução entre ordens compatíveis.
+- `LivroDeOfertas`: organiza as ordens ativas de um ativo.
+- `Mercado`: agrega ativos, livros e transações, além de processar submissão de ordens.
+- `Simulacao`: coordena o avanço temporal e a submissão controlada de ordens ao mercado.
 
-class Buyer(Investidor):
-    def decidir(self, ativo: Ativo, tempo: Tempo) -> Side:
-        return Side.BUY
+Essas classes formam uma base reutilizável para construção de cenários específicos sem acoplar o núcleo a uma teoria econômica ou microestrutura única.
 
+---
 
-class Seller(Investidor):
-    def decidir(self, ativo: Ativo, tempo: Tempo) -> Side:
-        return Side.SELL
+## 🧪 Exemplo mínimo de uso
 
+````python
+from decimal import Decimal
 
-def price_fn(ativo: Ativo, tempo: Tempo, mercado: Mercado) -> float:
-    return 100.0
+from mercadolab.api.ativo import Ativo, TipoAtivo
+from mercadolab.api.carteira import Carteira
+from mercadolab.api.investidor import Investidor
+from mercadolab.api.mercado import Mercado
+from mercadolab.api.ordem import LadoOrdem, TipoOrdem
+from mercadolab.api.posicao import Posicao
+from mercadolab.api.simulacao import Simulacao
+from mercadolab.api.tempo import Tempo
 
-
-mercado = Mercado("mercado_teste")
-mercado.adicionar_ativo(Ativo("AAA11"))
-
-investidores = (
-    Buyer("b1", "Buyer 1", Dinheiro("BRL", 1000.0)),
-    Seller("s1", "Seller 1", Dinheiro("BRL", 1000.0)),
+# 1. Criar ativo
+fii = Ativo(
+    ticker="XPML11",
+    tipo=TipoAtivo.FII,
+    nome="FII Exemplo XPML11",
+    moeda="BRL",
+    tick_size=Decimal("0.01"),
+    lote_padrao=1,
 )
 
-with make_executor(max_workers=8) as executor:
-    scheduler = ParallelScheduler(
-        mercado=mercado,
-        investidores=investidores,
-        executor=executor,
+# 2. Criar mercado e adicionar ativo
+mercado = Mercado(nome="Mercado FII Exemplo")
+mercado.adicionar_ativo(fii)
+
+# 3. Criar investidores
+comprador = Investidor(
+    nome="Comprador",
+    carteira=Carteira(caixa=Decimal("10000.00")),
+)
+
+vendedor = Investidor(
+    nome="Vendedor",
+    carteira=Carteira(caixa=Decimal("0.00")),
+)
+
+# 4. Dar posição inicial ao vendedor
+vendedor.carteira.posicoes[fii.ticker] = Posicao(
+    ativo=fii,
+    quantidade=10,
+    preco_medio=Decimal("100.00"),
+)
+
+# 5. Criar simulação
+sim = Simulacao(mercado=mercado, tempo_atual=Tempo(tick=0))
+sim.adicionar_investidor(comprador)
+sim.adicionar_investidor(vendedor)
+
+# 6. Criar ordens no mesmo tick
+ordem_venda = vendedor.emitir_ordem(
+    ativo=fii,
+    lado=LadoOrdem.VENDA,
+    tipo=TipoOrdem.LIMITADA,
+    quantidade=5,
+    tempo=sim.tempo_atual,
+    preco_limite=Decimal("105.00"),
+)
+
+ordem_compra = comprador.emitir_ordem(
+    ativo=fii,
+    lado=LadoOrdem.COMPRA,
+    tipo=TipoOrdem.LIMITADA,
+    quantidade=5,
+    tempo=sim.tempo_atual,
+    preco_limite=Decimal("105.00"),
+)
+
+# 7. Executar um tick
+transacoes = sim.executar_tick([ordem_venda, ordem_compra])
+
+print("Tempo atual após o tick:", sim.tempo_atual)
+print("Quantidade de transações:", len(transacoes))
+
+for t in transacoes:
+    print(
+        t.ativo.ticker,
+        t.quantidade,
+        t.preco,
+        t.valor_total,
     )
-    transacoes = scheduler.executar_passo(
-        Tempo(1),
-        price_fn=price_fn,
-        enforce_cash=True,
-    )
-```
 
-Conceitos centrais:
+print("Caixa comprador:", comprador.carteira.caixa)
+print("Caixa vendedor:", vendedor.carteira.caixa)
+print("Posição comprador:", comprador.carteira.obter_posicao(fii))
+print("Posição vendedor:", vendedor.carteira.obter_posicao(fii))
+````
 
-- `Investidor.decidir(ativo, tempo) -> Side`: contrato central para definição do comportamento dos agentes.
-- `Mercado` organiza os ativos disponíveis no cenário.
-- `ParallelScheduler` coordena a execução das decisões e o pareamento básico de transações.
-- MercadoLab não impõe uma microestrutura fechada; ele oferece um núcleo extensível para construção de cenários.
+Esse exemplo demonstra o fluxo mínimo ponta a ponta:
 
----
-
-## Cenários disponíveis
-
-Além do núcleo do domínio e do mecanismo de execução, o MercadoLab já inclui cenários de referência construídos **sem alterar o core da framework**.  
-Esses cenários têm dois objetivos principais:
-
-- demonstrar como o núcleo pode ser usado na prática;
-- servir como base para documentação, testes e evolução de cenários mais sofisticados.
-
-A ideia central é que o **core permaneça pequeno, estável e neutro**, enquanto cenários concretos são construídos por composição em uma camada própria.
-
-### `BasicMarketScenario`
-
-O `BasicMarketScenario` foi criado como **cenário mínimo de referência**.
-
-Ele existe para mostrar, de forma previsível e didática, que o fluxo essencial do MercadoLab já funciona ponta a ponta:
-
+- criação de ativo;
 - criação de mercado;
-- definição de ativos;
-- criação de investidores;
-- execução por ticks;
-- geração de transações;
-- atualização de caixa dos agentes;
-- uso do `ParallelScheduler`.
-
-#### O que foi modelado
-
-No cenário básico:
-
-- há compradores e vendedores fixos;
-- compradores sempre decidem `BUY`;
-- vendedores sempre decidem `SELL`;
-- os ativos são definidos no próprio cenário;
-- o preço é gerado por uma função simples e determinística;
-- a execução ocorre por um número configurável de ticks.
-
-#### O que foi deixado de fora de propósito
-
-O cenário básico **não** tenta representar um mercado realista.  
-Por escolha de projeto, ele não inclui:
-
-- influência social;
-- notícias;
-- carteira por ativo;
-- hold/inatividade;
-- mudança adaptativa de estratégia;
-- formação de preço endógena;
-- ordem limitada ou order book completo.
-
-Isso foi intencional: o papel do `BasicMarketScenario` é ser um **baseline funcional, legível e testável**.
+- emissão de ordens;
+- execução de transação;
+- atualização patrimonial.
 
 ---
 
-### `AdaptiveMarketScenario`
+## 📈 Exemplo mais completo
 
-O `AdaptiveMarketScenario` foi criado como um segundo passo: um cenário ainda simples, mas já com **heterogeneidade comportamental**.
+O repositório também pode incluir uma simulação anual simplificada com múltiplos investidores em:
 
-Ele demonstra que o MercadoLab consegue sustentar agentes cuja decisão depende de múltiplos fatores, sem que isso exija mudanças no núcleo da framework.
+````text
+mercadolab/scenarios/exemplo_simulacao_anual.py
+````
 
-#### O que foi modelado 2
+Esse exemplo demonstra:
 
-Neste cenário, cada agente toma decisão com base em três componentes principais:
+- múltiplos participantes;
+- geração externa de ordens;
+- 252 ticks de simulação;
+- transações, volume e estado patrimonial final;
+- uso da framework sem impor estratégias internas.
 
-- **vizinhos**: o agente observa uma pequena vizinhança social;
-- **carteira**: o estado atual do caixa influencia sua predisposição;
-- **fator externo**: um sinal exógeno global afeta o sentimento do mercado.
+### Execução dos exemplos
 
-Além disso, cada agente possui um **viés individual**, o que evita simetria total e permite que compradores e vendedores coexistam no mesmo tick.
+Após instalar o projeto em modo editável, os exemplos podem ser executados como módulos do pacote:
 
-#### O que esse cenário demonstra
-
-O `AdaptiveMarketScenario` mostra que:
-
-- o comportamento dos agentes pode ser não trivial;
-- a decisão pode combinar fatores internos e externos;
-- a framework suporta cenários com interação social simples;
-- transações e saldos passam a divergir entre agentes;
-- o mercado pode exibir dinâmica mais rica do que no cenário básico.
-
-#### O que ainda não foi incluído
-
-Mesmo sendo mais expressivo que o cenário básico, esse cenário ainda não pretende ser uma modelagem completa de mercado.  
-Ele ainda não inclui, por exemplo:
-
-- inventário detalhado por ativo;
-- decisão explícita de quantidade;
-- estado `HOLD`;
-- rede social complexa;
-- formação de preço baseada diretamente no excesso de demanda;
-- order book completo.
-
-O objetivo aqui é manter um cenário **intermediário**: simples o suficiente para ser entendido, mas rico o suficiente para demonstrar adaptação e heterogeneidade.
-
-Os cenários atuais foram desenvolvidos em etapas: primeiro um cenário determinístico e mínimo (`BasicMarketScenario`), depois um cenário com heterogeneidade e influência social (`AdaptiveMarketScenario`). Essa progressão ajuda a validar o núcleo do MercadoLab antes da introdução de estruturas mais sofisticadas.
+````bash
+python -m mercadolab.scenarios.exemplo_minimo_fii
+python -m mercadolab.scenarios.exemplo_simulacao_anual
+````
 
 ---
 
-## Papel dos cenários na arquitetura do MercadoLab
+## 🧭 Filosofia de projeto
 
-Os cenários de referência foram construídos para reforçar uma decisão arquitetural importante do projeto:
+O MercadoLab foi projetado para ser uma **ferramenta de construção**, não um modelo fechado de mercado.
 
-> o núcleo da framework não deve embutir uma única teoria de mercado, mas deve permitir que diferentes cenários sejam construídos sobre uma base comum.
+Isso significa que a framework:
 
-Em outras palavras:
+- **fornece infraestrutura**, não estratégias prontas;
+- **mantém a simulação temporal**, mas não impõe comportamento dos agentes;
+- **processa ordens e transações**, mas não fixa uma única teoria econômica;
+- **permite diferentes mercados** sobre a mesma base conceitual.
 
-- o **core** oferece os componentes fundamentais;
-- a **engine** executa a dinâmica;
-- os **cenários** combinam esses elementos para produzir mercados concretos.
+Assim, o mesmo núcleo pode ser utilizado para:
 
-Essa separação é central para o MercadoLab, porque permite:
+- mercados de FIIs;
+- mercados de criptoativos;
+- mercados de ações;
+- cenários acadêmicos sintéticos;
+- protótipos experimentais com microestruturas customizadas.
 
-- clareza arquitetural;
-- extensibilidade;
-- reprodutibilidade;
-- comparação entre cenários;
-- e evolução incremental do projeto sem contaminar o núcleo com regras muito específicas.
+---
+
+## 🧠 O que a framework deixa em aberto
+
+Por escolha arquitetural, o MercadoLab **não impõe**:
+
+- estratégias de decisão dos agentes;
+- subclasses obrigatórias de investidores;
+- uma única política de formação de preço;
+- uma única teoria econômica;
+- um conjunto fixo de cenários;
+- uma única política de concorrência.
+
+Essas decisões pertencem ao desenvolvedor ou pesquisador que utiliza a framework.
+
+---
+
+## ⚙️ Concorrência e reprodutibilidade
+
+A arquitetura atual favorece a separação entre:
+
+- **coordenação temporal da simulação**
+- **processamento do mercado**
+- **lógica externa de geração de ordens**
+
+Essa separação permite evoluir para modos opcionais de concorrência na coleta ou geração de ordens, sem impor paralelismo ao núcleo do mercado.
+
+### Observação importante
+
+Quando a geração de ordens depende de um gerador pseudoaleatório global, como `random.seed(...)`, a execução concorrente pode comprometer a reprodutibilidade estrita do experimento.
+
+Isso acontece porque a semente fixa apenas o estado inicial do gerador, mas a sequência efetivamente consumida depende da **ordem de execução** das tarefas. Em execução serial, essa ordem é previsível; em execução concorrente, ela pode variar.
+
+Por isso:
+
+- **modo serial** tende a ser mais reprodutível;
+- **modo concorrente** pode ser útil para desempenho, mas exige mais cuidado experimental.
 
 ---
 
 ## 🔬 Motivação científica
 
-Frameworks que já trazem uma microestrutura embutida tendem a impor pressupostos teóricos ao experimento.
-O MercadoLab busca manter a microestrutura como variável de modelagem — e não como premissa fixa do framework.
+Muitas bibliotecas e implementações de mercados artificiais já embutem uma microestrutura, uma política de execução ou um conjunto específico de agentes. Isso pode limitar a reutilização do software e introduzir premissas teóricas diretamente na infraestrutura experimental.
 
-Ideal para:
+O MercadoLab busca separar:
 
-- calibração
-- experimentos ABM puros
-- replicação de artigos
-- teses / dissertações sobre dinâmica de preço artificial
+- **infraestrutura do mercado**
+- **orquestração da simulação**
+- **hipóteses comportamentais e teóricas**
+
+Essa separação favorece:
+
+- reprodutibilidade;
+- extensibilidade;
+- clareza arquitetural;
+- comparação entre cenários;
+- uso em ensino e pesquisa.
+
+---
+
+## ✅ Testes
+
+O núcleo atual da framework já pode ser validado por testes automatizados cobrindo, entre outros pontos:
+
+- criação de ativos;
+- emissão e validação de ordens;
+- organização do livro de ofertas;
+- submissão ao mercado;
+- geração de transações;
+- atualização patrimonial;
+- avanço temporal da simulação.
+
+Execução da suíte:
+
+````bash
+pytest
+````
 
 ---
 
@@ -224,16 +291,18 @@ Ideal para:
 
 - Lint: `ruff check .`
 - Testes: `pytest`
-- Tipagem (opcional): `mypy src/mercadolab`
+- Tipagem: `mypy src/mercadolab`
 
 ---
 
-## 🗺️ Roadmap (curto prazo)
+## 🗺️ Roadmap
 
-- [ ] `chunk_size` auto-tuning para scheduler
-- [ ] métricas auxiliares (opcionais) sem impor microestrutura
-- [ ] hooks de instrumentação (opt-in)
-- [ ] camada opcional de coleta de estatísticas sem Book
+- [ ] ampliar exemplos de uso da framework
+- [ ] formalizar contratos de extensão para estratégias e agentes
+- [ ] adicionar cenários de referência sem contaminar o núcleo
+- [ ] expandir documentação de integração com notebooks e Google Colab
+- [ ] evoluir o suporte opcional à coleta concorrente de ordens
+- [ ] ampliar coleta de métricas para análise experimental
 
 ---
 
@@ -252,10 +321,10 @@ Distribuído sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
 
 ---
 
-## 📚 Citar
+## 📚 Citação
 
 Mauricio Sanches de Jesus, Raphael (2025).
-MercadoLab — framework baseado em agentes para mercados artificiais.
+**MercadoLab — framework baseado em agentes para mercados artificiais.**
 GitHub: [https://github.com/Hargenx/mercadolab](https://github.com/Hargenx/mercadolab)
 
 ---
