@@ -9,6 +9,7 @@ build/
 dist/
 *.egg-info/
 .eggs/
+.github/
 
 # Virtual environments
 .venv/
@@ -24,3 +25,12 @@ ENV/
 
 # qodo
 *.qodo
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
