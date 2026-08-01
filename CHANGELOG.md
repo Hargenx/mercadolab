@@ -2,6 +2,27 @@
 
 Todas as mudanças notáveis neste projeto serão documentadas aqui.
 
+## [Unreleased]
+
+### Added
+
+- Inclusão do cenário `mercadolab.scenarios.exemplo_coleta_metricas` para coleta e exportação de métricas experimentais.
+- Inclusão do cenário `mercadolab.scenarios.exemplo_graficos_metricas` para geração de visualizações a partir das métricas coletadas.
+- Inclusão de teste automatizado de reprodutibilidade que compara duas execuções completas do cenário anual com a mesma seed.
+
+### Changed
+
+- Ampliação do teste de integração de `Mercado` para verificar as posições finais do comprador e do vendedor após a liquidação.
+- Ajustes de estilo, imports e tipagem verificados com Ruff e Mypy.
+- Atualização do `README.md` para explicitar a microestrutura básica com prioridade preço-tempo e separar o comportamento dos agentes do núcleo.
+- Atualização do `CONTRIBUTING.md` para refletir a estrutura atual do repositório, os contratos vigentes e as regras de reprodutibilidade.
+
+### Removed
+
+- Remoção do `ParallelScheduler`, incompatível com a API atual baseada em ordens, livro de ofertas, mercado e simulação.
+- Remoção do benchmark antigo `bench_scheduler_tick.py`, que dependia do scheduler e dos contratos anteriores.
+- Remoção de regras e referências documentais relacionadas ao scheduler antigo.
+
 ## [0.2.0] - 2026-04-12
 
 ### Added
@@ -115,7 +136,7 @@ Todas as mudanças notáveis neste projeto serão documentadas aqui.
 
 ## [0.1.0] - 2025-09-20
 
-### Added - 1
+### Added
 
 - Estrutura inicial do projeto.
 - CLI com `quickstart`, `plugins` e `run`.
