@@ -10,18 +10,17 @@ Este projeto busca oferecer uma base **clara**, **extensível** e **reproduzíve
 
 Toda contribuição deve preservar os seguintes princípios:
 
-1. **MercadoLab não deve impor uma microestrutura específica de mercado.**
-2. **O núcleo do projeto deve permanecer pequeno, claro e extensível.**
-3. **Componentes de domínio, execução e cenários devem manter separação de responsabilidades.**
-4. **Novas abstrações devem favorecer reusabilidade e neutralidade metodológica.**
-5. **Investidor segue o contrato central:** `decidir(ativo, tempo) -> Side`.
+1. **O MercadoLab fornece uma microestrutura básica e explícita**, atualmente baseada em livro de ofertas com prioridade preço-tempo.
+2. **O núcleo não deve impor estratégias de negociação ou comportamentos específicos aos participantes.**
+3. **O núcleo deve permanecer pequeno, claro, extensível e independente dos cenários experimentais.**
+4. **API pública, implementação interna e cenários devem manter responsabilidades separadas.**
+5. **Mudanças experimentais devem preservar ou documentar suas condições de reprodutibilidade.**
 
-Contribuições que embutem uma teoria econômica rígida, uma microestrutura obrigatória ou lógica experimental excessivamente específica provavelmente pertencem a:
+Contribuições que implementem estratégias específicas, regras comportamentais ou hipóteses de um experimento devem permanecer fora do núcleo. Dependendo de sua finalidade, elas podem ser apresentadas como:
 
-- uma camada opcional de cenário;
-- um exemplo em `examples/`;
-- um módulo separado;
-- ou um pacote complementar.
+- um cenário em `src/mercadolab/scenarios/`;
+- um exemplo acadêmico claramente identificado;
+- ou um pacote complementar construído sobre a API pública.
 
 ---
 
@@ -31,14 +30,22 @@ A estrutura pode evoluir com o projeto, mas em geral o repositório segue esta o
 
 ```text
 mercadolab/
-├── src/mercadolab/          # núcleo do pacote
-├── tests/                   # testes unitários, integração e benchmarks
-├── examples/                # exemplos de uso
+├── .github/workflows/            # integração contínua e publicação
+├── assets/                       # recursos visuais da documentação
+├── src/mercadolab/
+│   ├── api/                      # componentes públicos do domínio
+│   ├── internal/                 # mecanismos internos de execução
+│   ├── scenarios/                # cenários e exemplos executáveis
+│   ├── tests/                    # testes automatizados
+│   └── _legacy/                  # código legado em processo de remoção
 ├── README.md
 ├── CHANGELOG.md
 ├── CONTRIBUTING.md
-└── pyproject.toml                 → suíte de teste e benchmarks
+├── SECURITY.md
+└── pyproject.toml                # configuração do pacote e ferramentas
 ```
+
+A pasta `_legacy/` não deve receber novas funcionalidades. Seu conteúdo existe apenas como referência temporária durante a migração arquitetural.
 
 ---
 
@@ -54,37 +61,36 @@ Se sua contribuição altera a organização estrutural do projeto, explique cla
 
 São especialmente bem-vindas contribuições que melhorem:
 
-- clareza da API pública;
-- consistência de nomes, contratos e docstrings;
-- qualidade dos componentes centrais do domínio;
-- mecanismos de execução e scheduler;
-- exemplos de uso;
-- testes;
-- documentação;
-- organização arquitetural;
-- cenários de referência opcionais, desde que não contaminem o núcleo do projeto.
+- clareza e consistência da API pública;
+- contratos, validações e docstrings dos componentes de domínio;
+- processamento de ordens, pareamento e liquidação patrimonial;
+- coordenação temporal e reprodutibilidade;
+- testes automatizados;
+- documentação e exemplos executáveis;
+- cenários de referência que permaneçam separados do núcleo;
+- coleta e exportação opcional de métricas;
+- desempenho, quando acompanhado de evidência objetiva.
 
 ---
 
-## Tipos de contribuição que exigem mais cuidado
+## Mudanças que exigem mais cuidado
 
 Mudanças nas seguintes áreas exigem atenção especial:
 
-- `Investidor`
-- `Dinheiro`
-- `Tempo`
-- `Ativo`
-- `Mercado`
-- `Transacao`
-- `scheduler.py`
-- superfície pública do pacote (`__init__.py`)
+- classes e enumerações em `src/mercadolab/api/`;
+- processamento de ordens e regras de pareamento;
+- atualização de caixa, posições e preço médio;
+- avanço temporal da simulação;
+- superfície pública exposta pelos arquivos `__init__.py`;
+- estrutura do pacote e remoção de código legado.
 
-Se sua PR alterar um desses pontos, explique claramente:
+Se sua contribuição alterar um desses pontos, explique claramente:
 
 - o que mudou;
-- por que mudou;
-- qual o impacto na API;
-- e se houve impacto em exemplos, testes ou documentação.
+- por que a mudança é necessária;
+- qual é o impacto na API e no comportamento existente;
+- quais testes demonstram o novo comportamento;
+- e se exemplos, documentação ou `CHANGELOG.md` também foram atualizados.
 
 ---
 
@@ -118,50 +124,55 @@ Se sua PR alterar um desses pontos, explique claramente:
 
 ---
 
-## Regras para o scheduler e hot-path
+## Regras para o núcleo e o fluxo de execução
 
-O scheduler é uma parte sensível do projeto.
+Mudanças no processamento do mercado devem:
 
-Ao contribuir nessa área:
+- preservar ou documentar as regras de prioridade preço-tempo;
+- manter consistentes ordens, transações, caixa e posições;
+- evitar efeitos colaterais que não estejam explícitos na API;
+- preservar as condições documentadas de reprodutibilidade;
+- atualizar testes e exemplos quando houver mudança de comportamento.
 
-- preserve clareza de leitura;
-- evite complexidade acidental;
-- evite alocações desnecessárias no hot-path;
-- explique qualquer mudança de comportamento;
-- atualize testes e exemplos quando necessário.
-
-Mudanças relevantes de desempenho no scheduler devem, sempre que possível, vir acompanhadas de benchmark ou comparação objetiva.
-
-Refatorações de nomenclatura, clareza, correção funcional ou consistência arquitetural não precisam necessariamente de benchmark, desde que não alterem a intenção de desempenho do código.
+Otimizações não devem reduzir a clareza do núcleo sem uma justificativa técnica e uma medição objetiva do benefício.
 
 ---
 
-## Testes
+## Testes e verificações de qualidade
 
 Toda contribuição relevante deve incluir ou atualizar testes.
 
-Prioridades:
+As principais verificações do projeto são:
 
-1. testes unitários para o núcleo do domínio;
-2. testes de integração para o scheduler e fluxo básico de execução;
-3. benchmarks quando houver impacto de desempenho relevante.
+```bash
+ruff check .
+pytest
+mypy src/mercadolab/api src/mercadolab/internal
+```
 
-Se sua PR muda comportamento, a suíte de testes deve refletir isso.
+Prioridades da suíte:
+
+1. testes unitários para contratos e validações do domínio;
+2. testes de integração entre livro, mercado, carteiras e simulação;
+3. testes de regressão para falhas corrigidas;
+4. testes de reprodutibilidade para cenários determinísticos.
+
+Se uma contribuição mudar um comportamento observável, a suíte deve demonstrar tanto o novo resultado quanto os invariantes que continuam válidos.
 
 ---
 
-## Benchmarks
+## Desempenho e medições
 
-Benchmarks são importantes, mas devem ser usados com critério.
+Contribuições com alegações de melhoria de desempenho devem apresentar evidências reproduzíveis, contendo:
 
-Eles são especialmente úteis quando a contribuição:
+- versão do código comparada;
+- configuração utilizada;
+- tamanho do cenário;
+- quantidade de repetições;
+- ambiente de execução;
+- resultados antes e depois.
 
-- altera o scheduler;
-- muda a estratégia de execução concorrente;
-- modifica o caminho quente de decisão ou pareamento;
-- impacta volume de objetos ou custo por tick.
-
-Nem toda PR precisa incluir benchmark. Mas PRs com alegações de ganho de desempenho devem trazer evidência correspondente.
+O projeto não exige benchmark para toda contribuição. Medições são necessárias quando desempenho for parte da justificativa da mudança.
 
 ---
 
@@ -184,21 +195,24 @@ Cenários mais específicos podem ser aceitos desde que:
 
 ## API pública
 
-A API pública do topo do pacote deve permanecer **pequena e estável**.
+A API destinada à construção de cenários está concentrada em `src/mercadolab/api/` e nos símbolos explicitamente exportados pelos arquivos `__init__.py`.
 
-Mudanças nessa superfície devem ser tratadas com cuidado especial.
-Se uma PR:
+Módulos em `src/mercadolab/internal/` são detalhes de implementação e não possuem a mesma garantia de estabilidade.
 
-- adiciona um novo símbolo ao topo do pacote;
-- remove um símbolo existente;
-- ou altera um contrato público;
+Se uma contribuição:
 
-então ela deve:
+- adicionar, remover ou renomear uma classe, enumeração, método ou atributo público;
+- alterar uma assinatura existente;
+- modificar validações ou resultados observáveis;
+- ou mudar símbolos exportados por um arquivo `__init__.py`;
+
+ela deve:
 
 - justificar a mudança;
-- atualizar documentação;
-- atualizar testes relacionados à API pública;
-- e registrar o impacto no `CHANGELOG.md`.
+- atualizar os testes relacionados;
+- atualizar exemplos e documentação;
+- registrar incompatibilidades e instruções de migração;
+- e incluir a alteração no `CHANGELOG.md`.
 
 ---
 
@@ -207,8 +221,10 @@ então ela deve:
 Mudanças relevantes devem ser registradas no `CHANGELOG.md`, especialmente quando envolverem:
 
 - API pública;
-- comportamento do scheduler;
-- contratos centrais do domínio;
+- processamento de ordens ou regras de pareamento;
+- atualização patrimonial;
+- coordenação temporal;
+- reprodutibilidade;
 - arquitetura do projeto;
 - documentação de uso.
 
@@ -232,12 +248,15 @@ Ao abrir uma PR, tente incluir:
 
 Contribuições com alta chance de rejeição incluem:
 
-- lógica excessivamente específica de um único experimento no núcleo do pacote;
-- abstrações pouco claras ou prematuras;
-- mudanças grandes sem documentação do impacto;
-- inconsistência de nomenclatura;
-- quebra de API pública sem justificativa;
-- funcionalidades que imponham uma única microestrutura como comportamento obrigatório do framework.
+- estratégias ou comportamentos experimentais acoplados ao núcleo;
+- alterações nas regras de pareamento sem testes que demonstrem o comportamento;
+- mudanças que deixem caixa, posições, ordens e transações inconsistentes;
+- quebra de API pública sem justificativa e documentação de migração;
+- abstrações prematuras ou sem caso de uso demonstrável;
+- cenários pseudoaleatórios sem seed ou configuração experimental explícita;
+- novas funcionalidades adicionadas à pasta `_legacy/`;
+- alegações de desempenho sem evidência reproduzível;
+- mudanças grandes sem documentação do impacto arquitetural.
 
 ---
 
@@ -262,83 +281,3 @@ Isso ajuda a manter o projeto coerente e evita retrabalho.
 Ao contribuir, siga também o [Código de Conduta](CODE_OF_CONDUCT.md).
 
 Obrigado por ajudar a tornar o MercadoLab mais claro, consistente e útil para pesquisa, ensino e experimentação.
-
----
-
-## Regras de código
-
-- Python >= 3.11
-- dataclasses com `slots=True`
-- evitar alocações desnecessárias dentro do hot-path (run_tick)
-- nada de logging, prints ou I/O dentro do scheduler
-- alterações de desempenho: apresentar benchmark comparativo **antes e depois**
-
-Linter:
-
-```bash
-ruff check .
-```
-
-Testes:
-
-```bash
-pytest
-```
-
-Benchmarks:
-
-```bash
-pytest --benchmark-only
-```
-
-Uma PR que mexa em `scheduler.py` sem benchmark é automaticamente rejeitada.
-
----
-
-## Pull Requests
-
-Para aceitar uma PR:
-
-- Deve ser pequena, objetiva.
-- Deve vir acompanhada de testes.
-- Se alterar performance: benchmarks antes/depois.
-- Se adicionar API pública: abrir Issue de discussão **antes**.
-- Se adicionar microestrutura: NÃO entra.
-
----
-
-## Plugins externos
-
-Microestrutura deve ser publicada como plugin externo ou como pacote separado.
-
-Nome sugerido de namespace PyPI:
-
-`mercadolab-nome-do-projeto`
-
----
-
-## Decisões técnicas
-
-Toda mudança estrutural deve ser documentada em `CHANGELOG.md`.
-
----
-
-## Comunicação
-
-Abra Issues para:
-
-- propostas de melhoria de performance
-- novas otimizações da hot-path
-- instrumentação opcional (opt-in)
-- novas abstrações minimalistas (com justificativa formal)
-
-issues que pedem "adicionar Market" ou "simulação padrão" → serão fechadas como *wontfix*
-
----
-
-## Obrigado
-
-Cada melhoria de performance aqui tem impacto direto na capacidade de pesquisa.
-O foco deste projeto é ser uma base limpa, mínima e **veloz**.
-
-Contribuições que mantêm essa visão são extremamente bem-vindas.
