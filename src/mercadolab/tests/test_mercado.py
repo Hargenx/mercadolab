@@ -61,3 +61,14 @@ def test_mercado_submete_ordens_e_gera_transacao() -> None:
     assert transacoes[0].preco == Decimal("100.00")
     assert comprador.carteira.caixa == Decimal("500.00")
     assert vendedor.carteira.caixa == Decimal("500.00")
+    
+    posicao_comprador = comprador.carteira.obter_posicao(ativo)
+    posicao_vendedor = vendedor.carteira.obter_posicao(ativo)
+
+    assert posicao_comprador is not None
+    assert posicao_comprador.quantidade == 5
+    assert posicao_comprador.preco_medio == Decimal("100.00")
+
+    assert posicao_vendedor is not None
+    assert posicao_vendedor.quantidade == 5
+    assert posicao_vendedor.preco_medio == Decimal("90.00")
