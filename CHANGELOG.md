@@ -16,6 +16,8 @@ Todas as mudanças notáveis neste projeto serão documentadas aqui.
 - Ajustes de estilo, imports e tipagem verificados com Ruff e Mypy.
 - Atualização do `README.md` para explicitar a microestrutura básica com prioridade preço-tempo e separar o comportamento dos agentes do núcleo.
 - Atualização do `CONTRIBUTING.md` para refletir a estrutura atual do repositório, os contratos vigentes e as regras de reprodutibilidade.
+- Atualização do `CITATION.cff` para corrigir autoria, versão e descrição arquitetural do projeto.
+- Correção das instruções de instalação e suporte para explicitar que o MercadoLab ainda não está publicado no PyPI.
 
 ### Removed
 

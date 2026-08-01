@@ -4,9 +4,9 @@
 
 O MercadoLab requer Python 3.11 ou superior.
 
-Somente a versão mais recente publicada no PyPI recebe atualizações de segurança.
+O projeto ainda não possui uma versão publicada no PyPI. Durante esta fase de desenvolvimento, o suporte de segurança considera apenas o estado atual da branch `main` do repositório oficial.
 
-Versões anteriores, experimentais ou mantidas apenas em ramos antigos não recebem correções de segurança.
+Instalações baseadas em commits antigos, forks, versões experimentais ou ramos descontinuados não recebem correções de segurança.
 
 ---
 
@@ -59,8 +59,8 @@ Se o botão **Report a vulnerability** não estiver disponível, envie o relato 
 Inclua, quando possível:
 
 - descrição do comportamento e do possível impacto;
-- versão do MercadoLab, obtida com `pip show mercadolab`;
-- versão do Python;
+- versão declarada do MercadoLab, obtida com `pip show mercadolab`;
+- commit utilizado, obtido com `git rev-parse HEAD`;- versão do Python;
 - sistema operacional;
 - exemplo mínimo ou passos para reprodução;
 - condições necessárias para que o problema ocorra;

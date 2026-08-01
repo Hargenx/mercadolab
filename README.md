@@ -10,8 +10,6 @@ A proposta da framework é simples: **oferecer a infraestrutura para que outros 
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python >=3.11](https://img.shields.io/badge/python-%3E%3D3.11-blue.svg)](https://www.python.org/downloads/release/python-3110/)
-[![PyPI](https://img.shields.io/pypi/v/mercadolab)](https://pypi.org/project/mercadolab/)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/mercadolab)](https://pypi.org/project/mercadolab/)
 
 ---
 
@@ -28,17 +26,21 @@ A proposta da framework é simples: **oferecer a infraestrutura para que outros 
 
 ## 🚀 Instalação
 
+O MercadoLab ainda não está publicado no PyPI. A versão atual deve ser instalada diretamente a partir do repositório.
+
 ```bash
-pip install mercadolab
-````
+git clone https://github.com/Hargenx/mercadolab.git
+cd mercadolab
+python -m pip install .
+```
 
 ### Desenvolvimento local
 
-````bash
-git clone https://github.com/Hargenx/mercadolab.git
-cd mercadolab
-pip install -e ".[dev]"
-````
+Para instalar o projeto em modo editável com as ferramentas de desenvolvimento:
+
+```bash
+python -m pip install -e ".[dev]"
+```
 
 ---
 
@@ -316,9 +318,9 @@ Distribuído sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
 
 ## 📚 Citação
 
-Mauricio Sanches de Jesus, Raphael (2025).
-**MercadoLab — framework baseado em agentes para mercados artificiais.**
-GitHub: [https://github.com/Hargenx/mercadolab](https://github.com/Hargenx/mercadolab)
+Os metadados acadêmicos do projeto estão disponíveis em [`CITATION.cff`](CITATION.cff).
+
+No GitHub, use a opção **Cite this repository** para gerar a referência em formatos como BibTeX e APA. Ao citar resultados experimentais, informe também o commit ou a versão exata do MercadoLab utilizada.
 
 ---
 
