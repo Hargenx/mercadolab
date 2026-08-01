@@ -1,46 +1,41 @@
 cff-version: 1.2.0
 message: >-
-  If you use MercadoLab in your research, teaching, or derived software,
+  If you use MercadoLab in research, teaching, or derived software,
   please cite this software using the metadata below.
-title: "MercadoLab: a lightweight agent-based framework for artificial financial markets"
+title: "MercadoLab: a Python framework for agent-based artificial financial market scenarios"
 abstract: >-
-  MercadoLab is a minimal, research-oriented framework that provides invariant
-  building blocks for agent-based models in artificial financial markets
-  (Ativo, Tempo, Dinheiro, Side, Investidor) and a high-throughput parallel
-  scheduler. It deliberately avoids embedding market microstructure, price
-  engines, or order books, preserving methodological freedom and improving
-  reproducibility. Typical throughput on mid-range hardware is ~40 ms/tick for
-  ~1000 agents (run_tick) and ~24 ms/tick (decide_only).
+  MercadoLab is a Python framework for building artificial financial market
+  scenarios based on agents. It provides reusable components for assets,
+  participants, portfolios, positions, orders, transactions, order books,
+  markets, and discrete-time simulations. The current core includes a basic
+  limit order book with price-time priority, while agent behavior and
+  order-generation policies remain external to the framework. This separation
+  supports extensibility, controlled experimentation, and reproducibility.
   —
-  MercadoLab é um framework minimalista voltado à pesquisa que fornece apenas
-  blocos invariantes para ABM em mercados artificiais e um scheduler paralelo
-  de alto desempenho. Por design, não impõe microestrutura, motor de mercado
-  ou book, preservando liberdade metodológica e reprodutibilidade.
+  MercadoLab é uma framework em Python para construção de cenários de mercados
+  financeiros artificiais baseados em agentes. Ela fornece componentes
+  reutilizáveis para ativos, participantes, carteiras, posições, ordens,
+  transações, livros de ofertas, mercados e simulações em tempo discreto. O
+  núcleo atual inclui um livro de ofertas básico com prioridade preço-tempo,
+  enquanto o comportamento dos agentes e as políticas de geração de ordens
+  permanecem externos à framework. Essa separação favorece extensibilidade,
+  experimentação controlada e reprodutibilidade.
 type: software
 authors:
-  - family-names: "Mauricio Sanches de Jesus"
-    given-names: "Raphael"
+  - family-names: "Sanches de Jesus"
+    given-names: "Raphael Mauricio"
     email: "raphael.mauricio@gmail.com"
 repository-code: "https://github.com/Hargenx/mercadolab"
 url: "https://github.com/Hargenx/mercadolab"
 license: "MIT"
-version: "0.3.0"
-date-released: "2025-11-03"
+version: "0.2.0"
 keywords:
   - agent-based modeling
   - ABM
   - artificial financial markets
   - market microstructure
-  - parallel execution
-  - Python 3.11
+  - limit order book
+  - price-time priority
+  - market simulation
   - research software
   - reproducibility
-preferred-citation:
-  type: software
-  title: "MercadoLab: a lightweight agent-based framework for artificial financial markets"
-  authors:
-    - family-names: "Mauricio Sanches de Jesus"
-      given-names: "Raphael"
-  year: 2025
-  version: "0.3.0"
-  url: "https://github.com/Hargenx/mercadolab"
