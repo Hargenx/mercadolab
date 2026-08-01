@@ -4,9 +4,9 @@
 
 **Framework em Python para construção de cenários de mercados artificiais baseados em agentes.**
 
-O MercadoLab fornece um núcleo de domínio enxuto para modelar instrumentos negociáveis, participantes, ordens, transações, livros de ofertas, mercado e simulação temporal, sem impor uma única teoria comportamental, microestrutura fixa ou estratégia de decisão.
+O MercadoLab fornece um núcleo de domínio enxuto para modelar instrumentos negociáveis, participantes, ordens, transações, livros de ofertas, mercado e simulação temporal. A implementação atual oferece uma microestrutura básica com prioridade preço-tempo, sem impor uma teoria comportamental ou estratégia de decisão aos participantes.
 
-A proposta da framework é simples: **oferecer a infraestrutura para que outros desenvolvam seus próprios mercados artificiais**, como mercados de FIIs, criptoativos, ações ou cenários híbridos, mantendo em aberto regras de negociação, comportamento dos agentes e hipóteses experimentais.
+A proposta da framework é simples: **oferecer a infraestrutura para que outros desenvolvam seus próprios cenários de mercados artificiais**, como mercados de FIIs, criptoativos, ações ou cenários híbridos, mantendo em aberto o comportamento dos agentes, as políticas externas de geração de ordens e as hipóteses experimentais.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python >=3.11](https://img.shields.io/badge/python-%3E%3D3.11-blue.svg)](https://www.python.org/downloads/release/python-3110/)
@@ -19,7 +19,7 @@ A proposta da framework é simples: **oferecer a infraestrutura para que outros 
 
 - **Núcleo de domínio explícito**: `Ativo`, `Tempo`, `Investidor`, `Carteira`, `Posicao`, `Ordem`, `Transacao`, `LivroDeOfertas`, `Mercado` e `Simulacao`.
 - **Simulação neutra**: a framework coordena tempo e submissão de ordens sem impor estratégias ou políticas de decisão.
-- **Microestrutura aberta**: permite construir diferentes tipos de mercado sobre a mesma base.
+- **Microestrutura explícita**: oferece livro de ofertas com prioridade preço-tempo, processamento de ordens e liquidação integrada às carteiras.
 - **Foco em extensibilidade**: adequada para pesquisa, ensino, prototipação e experimentação.
 - **Arquitetura modular**: separa claramente domínio, negociação e orquestração temporal.
 - **Exemplos executáveis**: inclui exemplos mínimos e de simulação anual para demonstrar o uso da framework.
@@ -163,7 +163,7 @@ Esse exemplo demonstra o fluxo mínimo ponta a ponta:
 
 ## 📈 Exemplo mais completo
 
-O repositório também pode incluir uma simulação anual simplificada com múltiplos investidores em:
+O repositório inclui uma simulação anual simplificada com múltiplos investidores em:
 
 ````text
 mercadolab/scenarios/exemplo_simulacao_anual.py
@@ -226,36 +226,28 @@ Essas decisões pertencem ao desenvolvedor ou pesquisador que utiliza a framewor
 
 ## ⚙️ Concorrência e reprodutibilidade
 
-A arquitetura atual favorece a separação entre:
+A execução atual do MercadoLab é serial. A classe `Simulacao` coordena o avanço temporal, enquanto o `Mercado` processa as ordens e atualiza o estado patrimonial dos participantes.
 
-- **coordenação temporal da simulação**
-- **processamento do mercado**
-- **lógica externa de geração de ordens**
+No cenário anual de referência, a seed é centralizada e reinicializada antes de cada execução. Considerando a mesma versão do código, configuração e seed, duas execuções completas produzem a mesma saída. Esse comportamento é verificado automaticamente pelo teste de reprodutibilidade.
 
-Essa separação permite evoluir para modos opcionais de concorrência na coleta ou geração de ordens, sem impor paralelismo ao núcleo do mercado.
+A concorrência não integra o fluxo padrão atual. Ela poderá ser explorada futuramente na geração ou coleta externa de ordens, sem alterar a neutralidade do núcleo em relação às estratégias dos agentes.
 
-### Observação importante
-
-Quando a geração de ordens depende de um gerador pseudoaleatório global, como `random.seed(...)`, a execução concorrente pode comprometer a reprodutibilidade estrita do experimento.
-
-Isso acontece porque a semente fixa apenas o estado inicial do gerador, mas a sequência efetivamente consumida depende da **ordem de execução** das tarefas. Em execução serial, essa ordem é previsível; em execução concorrente, ela pode variar.
-
-Por isso:
-
-- **modo serial** tende a ser mais reprodutível;
-- **modo concorrente** pode ser útil para desempenho, mas exige mais cuidado experimental.
+Caso uma execução concorrente utilize geradores pseudoaleatórios compartilhados, a seed fixa isoladamente pode não garantir resultados idênticos, pois a ordem de consumo dos valores pode variar entre as tarefas. Por isso, qualquer implementação concorrente deverá explicitar seus mecanismos de determinismo e reprodutibilidade experimental.
 
 ---
 
 ## 🔬 Motivação científica
 
-Muitas bibliotecas e implementações de mercados artificiais já embutem uma microestrutura, uma política de execução ou um conjunto específico de agentes. Isso pode limitar a reutilização do software e introduzir premissas teóricas diretamente na infraestrutura experimental.
+Implementações de mercados artificiais frequentemente acoplam, no mesmo código, microestrutura, políticas de execução, comportamentos específicos de agentes e hipóteses experimentais. Esse acoplamento pode limitar a reutilização do software e dificultar a comparação controlada entre cenários.
 
-O MercadoLab busca separar:
+O MercadoLab adota uma microestrutura básica e explícita, baseada em livro de ofertas com prioridade preço-tempo, enquanto mantém separadas as decisões comportamentais que pertencem aos cenários construídos pelo usuário.
 
-- **infraestrutura do mercado**
-- **orquestração da simulação**
-- **hipóteses comportamentais e teóricas**
+Essa arquitetura distingue:
+
+- **infraestrutura de negociação e atualização patrimonial**
+- **orquestração temporal da simulação**
+- **políticas externas de geração de ordens**
+- **hipóteses comportamentais e experimentais**
 
 Essa separação favorece:
 
@@ -277,7 +269,8 @@ O núcleo atual da framework já pode ser validado por testes automatizados cobr
 - submissão ao mercado;
 - geração de transações;
 - atualização patrimonial;
-- avanço temporal da simulação.
+- avanço temporal da simulação;
+- reprodutibilidade do cenário anual com a mesma seed.
 
 Execução da suíte:
 
@@ -291,7 +284,7 @@ pytest
 
 - Lint: `ruff check .`
 - Testes: `pytest`
-- Tipagem: `mypy src/mercadolab`
+- Tipagem do núcleo: `mypy src/mercadolab/api src/mercadolab/internal`
 
 ---
 
