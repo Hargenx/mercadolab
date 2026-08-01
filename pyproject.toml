@@ -73,7 +73,10 @@ target-version = "py311"
 [tool.mypy]
 python_version = "3.11"
 strict = false
-packages = ["mercadolab"]
+files = [
+  "src/mercadolab/__init__.py",
+  "src/mercadolab/api"
+]
 
 [tool.pytest.ini_options]
 addopts = "-q"

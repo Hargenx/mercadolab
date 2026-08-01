@@ -9,6 +9,7 @@ Todas as mudanças notáveis neste projeto serão documentadas aqui.
 - Inclusão do cenário `mercadolab.scenarios.exemplo_coleta_metricas` para coleta e exportação de métricas experimentais.
 - Inclusão do cenário `mercadolab.scenarios.exemplo_graficos_metricas` para geração de visualizações a partir das métricas coletadas.
 - Inclusão de teste automatizado de reprodutibilidade que compara duas execuções completas do cenário anual com a mesma seed.
+- Inclusão de teste automatizado para validar os símbolos exportados pela API pública do pacote.
 
 ### Changed
 
@@ -18,12 +19,17 @@ Todas as mudanças notáveis neste projeto serão documentadas aqui.
 - Atualização do `CONTRIBUTING.md` para refletir a estrutura atual do repositório, os contratos vigentes e as regras de reprodutibilidade.
 - Atualização do `CITATION.cff` para corrigir autoria, versão e descrição arquitetural do projeto.
 - Correção das instruções de instalação e suporte para explicitar que o MercadoLab ainda não está publicado no PyPI.
+- Redefinição de `mercadolab.__init__` para exportar as classes e enumerações da API atual.
+- Configuração do Mypy ajustada para verificar diretamente o núcleo e a superfície pública.
 
 ### Removed
 
 - Remoção do `ParallelScheduler`, incompatível com a API atual baseada em ordens, livro de ofertas, mercado e simulação.
 - Remoção do benchmark antigo `bench_scheduler_tick.py`, que dependia do scheduler e dos contratos anteriores.
 - Remoção de regras e referências documentais relacionadas ao scheduler antigo.
+- Remoção de `Dinheiro` e `Side`, símbolos não utilizados pela arquitetura atual.
+- Remoção dos módulos internos de executor e pareamento que estavam sem consumidores.
+- Remoção da CLI legada, que dependia de módulos inexistentes da arquitetura anterior.
 
 ## [0.2.0] - 2026-04-12
 

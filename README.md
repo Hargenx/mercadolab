@@ -286,7 +286,7 @@ pytest
 
 - Lint: `ruff check .`
 - Testes: `pytest`
-- Tipagem do núcleo: `mypy src/mercadolab/api src/mercadolab/internal`
+- Tipagem do núcleo: `mypy`
 
 ---
 

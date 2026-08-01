@@ -34,18 +34,14 @@ mercadolab/
 ├── assets/                       # recursos visuais da documentação
 ├── src/mercadolab/
 │   ├── api/                      # componentes públicos do domínio
-│   ├── internal/                 # mecanismos internos de execução
 │   ├── scenarios/                # cenários e exemplos executáveis
-│   ├── tests/                    # testes automatizados
-│   └── _legacy/                  # código legado em processo de remoção
+│   └── tests/                    # testes automatizados
 ├── README.md
 ├── CHANGELOG.md
 ├── CONTRIBUTING.md
 ├── SECURITY.md
 └── pyproject.toml                # configuração do pacote e ferramentas
 ```
-
-A pasta `_legacy/` não deve receber novas funcionalidades. Seu conteúdo existe apenas como referência temporária durante a migração arquitetural.
 
 ---
 
@@ -147,7 +143,7 @@ As principais verificações do projeto são:
 ```bash
 ruff check .
 pytest
-mypy src/mercadolab/api src/mercadolab/internal
+mypy
 ```
 
 Prioridades da suíte:
@@ -197,7 +193,7 @@ Cenários mais específicos podem ser aceitos desde que:
 
 A API destinada à construção de cenários está concentrada em `src/mercadolab/api/` e nos símbolos explicitamente exportados pelos arquivos `__init__.py`.
 
-Módulos em `src/mercadolab/internal/` são detalhes de implementação e não possuem a mesma garantia de estabilidade.
+Os módulos em `src/mercadolab/scenarios/` são cenários de referência e não fazem parte da superfície pública estável.
 
 Se uma contribuição:
 
@@ -254,7 +250,6 @@ Contribuições com alta chance de rejeição incluem:
 - quebra de API pública sem justificativa e documentação de migração;
 - abstrações prematuras ou sem caso de uso demonstrável;
 - cenários pseudoaleatórios sem seed ou configuração experimental explícita;
-- novas funcionalidades adicionadas à pasta `_legacy/`;
 - alegações de desempenho sem evidência reproduzível;
 - mudanças grandes sem documentação do impacto arquitetural.
 
