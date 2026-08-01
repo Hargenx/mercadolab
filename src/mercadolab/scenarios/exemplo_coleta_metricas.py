@@ -1,11 +1,11 @@
 from __future__ import annotations
 
+import csv
+import random
 from collections.abc import Sequence
 from decimal import Decimal
 from pathlib import Path
 from typing import TypedDict
-import csv
-import random
 
 from mercadolab.api.ativo import Ativo, TipoAtivo
 from mercadolab.api.carteira import Carteira
@@ -16,7 +16,6 @@ from mercadolab.api.posicao import Posicao
 from mercadolab.api.simulacao import Simulacao
 from mercadolab.api.tempo import Tempo
 from mercadolab.api.transacao import Transacao
-
 
 SEED = 42
 TOTAL_TICKS = 252

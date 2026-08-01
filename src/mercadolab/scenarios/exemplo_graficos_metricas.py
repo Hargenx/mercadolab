@@ -5,7 +5,6 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pandas as pd
 
-
 ARQUIVO_CSV = "metricas_simulacao_anual.csv"
 PASTA_SAIDA = "graficos_metricas"
 

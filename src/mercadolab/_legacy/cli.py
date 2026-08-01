@@ -1,8 +1,11 @@
 import argparse
 import sys
+
+from mercadolab import __version__
+
 from .core.simulation import Simulation
 from .plugins import load_plugins
-from mercadolab import __version__
+
 
 # Ajuda com defaults + exemplos formatados
 class _Help(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter):

@@ -11,7 +11,7 @@ from mercadolab.api.posicao import Posicao
 class Carteira:
     """Representa o estado patrimonial de um participante no mercado."""
 
-    caixa: Decimal = Decimal("0")
+    caixa: Decimal = Decimal(0)
     posicoes: dict[str, Posicao] = field(default_factory=dict)
 
     def __post_init__(self) -> None:

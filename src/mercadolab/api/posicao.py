@@ -12,7 +12,7 @@ class Posicao:
 
     ativo: Ativo
     quantidade: int = 0
-    preco_medio: Decimal = Decimal("0")
+    preco_medio: Decimal = Decimal(0)
 
     def __post_init__(self) -> None:
         if self.quantidade < 0:
@@ -54,7 +54,7 @@ class Posicao:
         self.quantidade -= quantidade
 
         if self.quantidade == 0:
-            self.preco_medio = Decimal("0")
+            self.preco_medio = Decimal(0)
 
     def zerada(self) -> bool:
         return self.quantidade == 0

@@ -16,6 +16,6 @@ class Tempo:
         if self.tick < 0:
             raise ValueError("O tick não pode ser negativo.")
 
-    def proximo(self) -> "Tempo":
+    def proximo(self) -> Tempo:
         """Retorna o próximo instante discreto da mesma sessão."""
         return Tempo(self.tick + 1, sessao=self.sessao)

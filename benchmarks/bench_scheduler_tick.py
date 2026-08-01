@@ -1,5 +1,6 @@
 # tests/test_bench_decidir.py
 import pytest
+
 from src.mercadolab import Ativo, Dinheiro, Investidor, Mercado, Side, Tempo
 from src.mercadolab.internal.engine import ParallelScheduler, make_executor
 

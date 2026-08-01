@@ -184,10 +184,8 @@ class Mercado:
             return False
         if posicao_vendedora is None:
             return False
-        if posicao_vendedora.quantidade < quantidade:
-            return False
 
-        return True
+        return posicao_vendedora.quantidade >= quantidade
 
     def _liquidar_transacao(self, transacao: Transacao) -> None:
         carteira_compradora = transacao.ordem_compra.investidor.carteira

@@ -50,9 +50,8 @@ class Ordem:
         if self.quantidade <= 0:
             raise ValueError("quantidade deve ser maior que zero.")
 
-        if self.tipo is TipoOrdem.LIMITADA:
-            if self.preco_limite is None or self.preco_limite <= 0:
-                raise ValueError("ordem limitada exige preco_limite positivo.")
+        if (self.tipo is TipoOrdem.LIMITADA and (self.preco_limite is None or self.preco_limite <= 0)):
+            raise ValueError("ordem limitada exige preco_limite positivo.")
 
         if self.tipo is TipoOrdem.MERCADO and self.preco_limite is not None:
             raise ValueError("ordem a mercado não deve ter preco_limite.")

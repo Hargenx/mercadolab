@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from decimal import Decimal
-from collections.abc import Sequence
 import random
+from collections.abc import Sequence
+from decimal import Decimal
 
 from mercadolab.api.ativo import Ativo, TipoAtivo
 from mercadolab.api.carteira import Carteira

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from concurrent.futures import Executor, ThreadPoolExecutor
 from dataclasses import dataclass, field
-from typing import Callable
 
 from ...api.ativo import Ativo
 from ...api.dinheiro import Dinheiro
@@ -11,7 +11,6 @@ from ...api.investidor import Investidor
 from ...api.mercado import Mercado
 from ...api.tempo import Tempo
 from ...api.transacao import Transacao
-
 
 PriceFunction = Callable[[Ativo, Tempo, Mercado], float]
 
@@ -161,20 +160,7 @@ class ParallelScheduler:
             transacoes.append(transacao_compra)
             transacoes.append(transacao_venda)
 
-            self._notificar_transacao(comprador, transacao_compra)
-            self._notificar_transacao(vendedor, transacao_venda)
-
         return transacoes
-
-    @staticmethod
-    def _notificar_transacao(investidor: Investidor, transacao: Transacao) -> None:
-        """
-        Executa o hook pós-transação do investidor de forma tolerante a falhas.
-        """
-        try:
-            investidor.on_transacao(transacao)
-        except Exception:
-            pass
 
 
 def make_executor(max_workers: int | None = None) -> Executor:

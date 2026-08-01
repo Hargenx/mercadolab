@@ -1,15 +1,14 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
-from typing import Callable
 
 from mercadolab.api.investidor import Investidor
 from mercadolab.api.mercado import Mercado
 from mercadolab.api.ordem import Ordem
 from mercadolab.api.tempo import Tempo
 from mercadolab.api.transacao import Transacao
-
 
 GeradorOrdens = Callable[
     [Investidor, Mercado, Tempo], list[Ordem] | tuple[Ordem, ...] | None
