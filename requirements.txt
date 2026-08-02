@@ -1,3 +1,2 @@
 # Instalação local com dependências de desenvolvimento e visualização
-.[dev]
-.[plot]
+-e .[dev,plot]

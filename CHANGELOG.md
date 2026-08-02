@@ -21,6 +21,10 @@ Todas as mudanças notáveis neste projeto serão documentadas aqui.
 - Correção das instruções de instalação e suporte para explicitar que o MercadoLab ainda não está publicado no PyPI.
 - Redefinição de `mercadolab.__init__` para exportar as classes e enumerações da API atual.
 - Configuração do Mypy ajustada para verificar diretamente o núcleo e a superfície pública.
+- Ampliação da CI para executar Ruff, Pytest e Mypy em Python 3.11 e 3.12.
+- Inclusão de construção e validação de wheel e sdist na integração contínua.
+- Ajuste do empacotamento para excluir testes da wheel e incluir metadados do projeto no sdist.
+- Consolidação das dependências locais de desenvolvimento e visualização em `requirements.txt`.
 
 ### Removed
 
@@ -30,6 +34,10 @@ Todas as mudanças notáveis neste projeto serão documentadas aqui.
 - Remoção de `Dinheiro` e `Side`, símbolos não utilizados pela arquitetura atual.
 - Remoção dos módulos internos de executor e pareamento que estavam sem consumidores.
 - Remoção da CLI legada, que dependia de módulos inexistentes da arquitetura anterior.
+
+### Testing
+
+- Validação da instalação da wheel em ambiente virtual limpo, incluindo importação da API pública e execução do cenário mínimo.
 
 ## [0.2.0] - 2026-04-12
 

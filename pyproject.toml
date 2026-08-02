@@ -56,16 +56,23 @@ Issues = "https://github.com/Hargenx/mercadolab/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/mercadolab"]
+exclude = [
+  "src/mercadolab/tests/**"
+]
 
 [tool.hatch.build.targets.sdist]
 include = [
   "src/mercadolab/**",
   "README.md",
+  "CHANGELOG.md",
+  "CITATION.cff",
+  "CODE_OF_CONDUCT.md",
+  "CONTRIBUTING.md",
+  "SECURITY.md",
   "LICENSE*",
-  "docs/**",
-  "tests/**"
+  "pyproject.toml",
+  "requirements.txt"
 ]
-
 [tool.ruff]
 line-length = 100
 target-version = "py311"
