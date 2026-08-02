@@ -96,9 +96,7 @@ class Ordem:
         self.status = StatusOrdem.EXPIRADA
 
     def cancelar(self) -> None:
-        if self.status is StatusOrdem.EXECUTADA:
-            raise ValueError("não é possível cancelar uma ordem já executada.")
-        if self.status is StatusOrdem.CANCELADA:
-            raise ValueError("a ordem já está cancelada.")
+        if not self.esta_ativa():
+            raise ValueError("apenas ordens ativas podem ser canceladas.")
 
         self.status = StatusOrdem.CANCELADA

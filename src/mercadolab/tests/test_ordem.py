@@ -59,3 +59,29 @@ def test_ordem_registra_execucao_parcial_e_total() -> None:
     ordem.registrar_execucao(3)
     assert ordem.quantidade_restante == 0
     assert ordem.status is StatusOrdem.EXECUTADA
+
+def test_ordem_expirada_nao_pode_ser_cancelada_nem_executada() -> None:
+    ativo, investidor, tempo = criar_contexto()
+
+    ordem = Ordem(
+        ativo=ativo,
+        investidor=investidor,
+        lado=LadoOrdem.COMPRA,
+        tipo=TipoOrdem.MERCADO,
+        quantidade=5,
+        tempo=tempo,
+    )
+
+    ordem.expirar()
+
+    assert ordem.status is StatusOrdem.EXPIRADA
+    assert ordem.quantidade_restante == 5
+
+    with pytest.raises(ValueError):
+        ordem.cancelar()
+
+    with pytest.raises(ValueError):
+        ordem.registrar_execucao(1)
+
+    with pytest.raises(ValueError):
+        ordem.expirar()
