@@ -10,6 +10,7 @@ Todas as mudanças notáveis neste projeto serão documentadas aqui.
 - Inclusão do cenário `mercadolab.scenarios.exemplo_graficos_metricas` para geração de visualizações a partir das métricas coletadas.
 - Inclusão de teste automatizado de reprodutibilidade que compara duas execuções completas do cenário anual com a mesma seed.
 - Inclusão de teste automatizado para validar os símbolos exportados pela API pública do pacote.
+- Ampliação da suíte para 19 testes, cobrindo cancelamento coordenado, estados terminais, ordens a mercado, preços incompatíveis, múltiplas contrapartes, execução parcial integrada e atomicidade patrimonial.
 
 ### Changed
 
@@ -27,6 +28,16 @@ Todas as mudanças notáveis neste projeto serão documentadas aqui.
 - Consolidação das dependências locais de desenvolvimento e visualização em `requirements.txt`.
 - Substituição da publicação com usuário e senha do PyPI por Trusted Publishing via OIDC.
 - Inclusão de validação entre a tag Git e a versão declarada no `pyproject.toml` antes de qualquer publicação.
+- Regeneração do CSV e dos gráficos do cenário anual após as correções de consistência, mantendo 252 ticks e atualizando a referência para 11.243 transações e volume financeiro total de `2031928.00`.
+
+### Fixed
+
+- Correção do cancelamento para manter coerentes o status da ordem e sua presença no livro de ofertas.
+- Remoção defensiva de ordens inativas encontradas no livro antes do pareamento.
+- Preservação de contrapartes válidas quando a ordem entrante não possui cobertura segundo a política patrimonial padrão.
+- Expiração explícita de contrapartes sem cobertura removidas do livro e de saldos não executados de ordens a mercado.
+- Proteção das transições terminais para impedir cancelamento ou execução de ordens expiradas.
+- Correção da atomicidade de `Carteira.aplicar_compra`, evitando posições residuais quando a operação é inválida.
 
 ### Removed
 
