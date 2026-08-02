@@ -25,6 +25,8 @@ Todas as mudanças notáveis neste projeto serão documentadas aqui.
 - Inclusão de construção e validação de wheel e sdist na integração contínua.
 - Ajuste do empacotamento para excluir testes da wheel e incluir metadados do projeto no sdist.
 - Consolidação das dependências locais de desenvolvimento e visualização em `requirements.txt`.
+- Substituição da publicação com usuário e senha do PyPI por Trusted Publishing via OIDC.
+- Inclusão de validação entre a tag Git e a versão declarada no `pyproject.toml` antes de qualquer publicação.
 
 ### Removed
 
