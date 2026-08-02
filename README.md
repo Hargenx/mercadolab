@@ -190,6 +190,16 @@ python -m mercadolab.scenarios.exemplo_simulacao_anual
 
 ---
 
+### Notebook executável no Google Colab
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/135SlCmiZe7qe--LOL2ydBoxAKw-JXEyW?usp=sharing)
+
+O notebook executa a validação da API pública, a suíte automatizada, o cenário mínimo, o cenário anual, a coleta de métricas e a geração de gráficos. A execução fixa o commit de referência e compara o SHA-256 do CSV entre duas execuções.
+
+A reprodutibilidade também foi verificada entre Windows e Google Colab, produzindo 11.243 transações, volume financeiro total de `2031928.00` e o mesmo SHA-256 para o CSV.
+
+---
+
 ## 🧭 Filosofia de projeto
 
 O MercadoLab foi projetado para ser uma **ferramenta de construção**, não um modelo fechado de mercado.

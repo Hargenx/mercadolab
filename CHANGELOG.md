@@ -29,6 +29,7 @@ Todas as mudanças notáveis neste projeto serão documentadas aqui.
 - Substituição da publicação com usuário e senha do PyPI por Trusted Publishing via OIDC.
 - Inclusão de validação entre a tag Git e a versão declarada no `pyproject.toml` antes de qualquer publicação.
 - Regeneração do CSV e dos gráficos do cenário anual após as correções de consistência, mantendo 252 ticks e atualizando a referência para 11.243 transações e volume financeiro total de `2031928.00`.
+- Inclusão de `notebooks/validacao_mercadolab.ipynb` como demonstração executável local e no Google Colab.
 
 ### Fixed
 
@@ -51,6 +52,7 @@ Todas as mudanças notáveis neste projeto serão documentadas aqui.
 ### Testing
 
 - Validação da instalação da wheel em ambiente virtual limpo, incluindo importação da API pública e execução do cenário mínimo.
+- Validação da reprodutibilidade entre Windows e Google Colab no commit `6ab9db282acd9268ea1877bae04ab2d7f09eeee0`, com resultados agregados e SHA-256 do CSV idênticos.
 
 ## [0.2.0] - 2026-04-12
 
