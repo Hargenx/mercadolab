@@ -89,6 +89,12 @@ class Ordem:
         else:
             self.status = StatusOrdem.PARCIALMENTE_EXECUTADA
 
+    def expirar(self) -> None:
+        if not self.esta_ativa():
+            raise ValueError("apenas ordens ativas podem expirar.")
+
+        self.status = StatusOrdem.EXPIRADA
+
     def cancelar(self) -> None:
         if self.status is StatusOrdem.EXECUTADA:
             raise ValueError("não é possível cancelar uma ordem já executada.")

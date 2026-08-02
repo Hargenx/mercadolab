@@ -5,7 +5,7 @@ from decimal import Decimal
 
 from mercadolab.api.ativo import Ativo
 from mercadolab.api.livro_de_ofertas import LivroDeOfertas
-from mercadolab.api.ordem import LadoOrdem, Ordem, StatusOrdem, TipoOrdem
+from mercadolab.api.ordem import LadoOrdem, Ordem, TipoOrdem
 from mercadolab.api.transacao import Transacao
 
 
@@ -57,6 +57,29 @@ class Mercado:
     def listar_transacoes(self) -> tuple[Transacao, ...]:
         return tuple(self._transacoes)
 
+    def cancelar_ordem(self, ordem: Ordem) -> None:
+        """Cancela uma ordem ativa e a remove do respectivo livro de ofertas."""
+        if ordem.ativo.ticker not in self._ativos:
+            raise ValueError(
+                f"O ativo '{ordem.ativo.ticker}' não está listado neste mercado."
+            )
+
+        if not ordem.esta_ativa():
+            raise ValueError("apenas ordens ativas podem ser canceladas.")
+
+        livro = self.obter_livro(ordem.ativo.ticker)
+        ordens_do_lado = (
+            livro.ordens_compra
+            if ordem.lado is LadoOrdem.COMPRA
+            else livro.ordens_venda
+        )
+
+        if ordem not in ordens_do_lado:
+            raise ValueError("a ordem não está registrada no livro de ofertas.")
+
+        ordem.cancelar()
+        livro.remover_ordem(ordem)
+
     def submeter_ordem(self, ordem: Ordem) -> tuple[Transacao, ...]:
         """Submete uma ordem nova ao mercado e retorna as transações geradas."""
         if ordem.ativo.ticker not in self._ativos:
@@ -79,6 +102,10 @@ class Mercado:
 
         while ordem.esta_ativa() and livro_oposto:
             melhor_contraparte = livro_oposto[0]
+
+            if not melhor_contraparte.esta_ativa():
+                livro.remover_ordem(melhor_contraparte)
+                continue
 
             if not self._ordens_sao_compativeis(ordem, melhor_contraparte):
                 break
@@ -104,8 +131,16 @@ class Mercado:
                 quantidade=quantidade_exec,
                 preco=preco_exec,
             ):
-                livro.remover_ordem(melhor_contraparte)
-                continue
+                if not self._ordem_eh_liquidavel(
+                    ordem=melhor_contraparte,
+                    quantidade=quantidade_exec,
+                    preco=preco_exec,
+                ):
+                    melhor_contraparte.expirar()
+                    livro.remover_ordem(melhor_contraparte)
+                    continue
+
+                break
 
             transacao = self._criar_transacao(
                 ordem_entrante=ordem,
@@ -128,8 +163,7 @@ class Mercado:
         if ordem.esta_ativa() and ordem.tipo is TipoOrdem.LIMITADA:
             livro.adicionar_ordem(ordem)
         elif ordem.esta_ativa() and ordem.tipo is TipoOrdem.MERCADO:
-            ordem.status = StatusOrdem.EXPIRADA
-
+            ordem.expirar()
         return tuple(transacoes)
 
     def _ordens_sao_compativeis(
@@ -174,18 +208,31 @@ class Mercado:
         quantidade: int,
         preco: Decimal,
     ) -> bool:
-        carteira_compradora = ordem_compra.investidor.carteira
-        carteira_vendedora = ordem_venda.investidor.carteira
+        return self._ordem_eh_liquidavel(
+            ordem=ordem_compra,
+            quantidade=quantidade,
+            preco=preco,
+        ) and self._ordem_eh_liquidavel(
+            ordem=ordem_venda,
+            quantidade=quantidade,
+            preco=preco,
+        )
 
-        custo_total = preco * Decimal(quantidade)
-        posicao_vendedora = carteira_vendedora.obter_posicao(ordem_venda.ativo)
+    def _ordem_eh_liquidavel(
+        self,
+        ordem: Ordem,
+        quantidade: int,
+        preco: Decimal,
+    ) -> bool:
+        """Aplica a política patrimonial padrão de liquidação à vista."""
+        carteira = ordem.investidor.carteira
 
-        if carteira_compradora.caixa < custo_total:
-            return False
-        if posicao_vendedora is None:
-            return False
+        if ordem.lado is LadoOrdem.COMPRA:
+            custo_total = preco * Decimal(quantidade)
+            return carteira.caixa >= custo_total
 
-        return posicao_vendedora.quantidade >= quantidade
+        posicao = carteira.obter_posicao(ordem.ativo)
+        return posicao is not None and posicao.quantidade >= quantidade
 
     def _liquidar_transacao(self, transacao: Transacao) -> None:
         carteira_compradora = transacao.ordem_compra.investidor.carteira

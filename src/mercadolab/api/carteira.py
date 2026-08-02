@@ -38,8 +38,15 @@ class Carteira:
         if custo_total > self.caixa:
             raise ValueError("caixa insuficiente para realizar a compra.")
 
-        posicao = self.garantir_posicao(ativo)
-        posicao.aplicar_compra(quantidade, preco)
+        posicao = self.obter_posicao(ativo)
+
+        if posicao is None:
+            nova_posicao = Posicao(ativo=ativo)
+            nova_posicao.aplicar_compra(quantidade, preco)
+            self.posicoes[ativo.ticker] = nova_posicao
+        else:
+            posicao.aplicar_compra(quantidade, preco)
+
         self.caixa -= custo_total
 
     def aplicar_venda(self, ativo: Ativo, quantidade: int, preco: Decimal) -> None:
